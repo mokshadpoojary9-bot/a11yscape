@@ -1,0 +1,149 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --header-height: 4rem;
+  }
+
+  * {
+    @apply border-line;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-midnight-950 font-sans text-[15px] text-ink;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+    text-rendering: optimizeLegibility;
+    background-image:
+      radial-gradient(1100px 620px at 10% -12%, rgba(34, 211, 238, 0.07), transparent 62%),
+      radial-gradient(900px 560px at 92% -6%, rgba(139, 124, 246, 0.07), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgba(34, 211, 238, 0.24);
+    color: #f2f8ff;
+  }
+
+  :focus-visible {
+    outline: none;
+    @apply rounded-md shadow-focus;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply tracking-[-0.02em] text-ink;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+  }
+
+  /* Restrained scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 176, 214, 0.22) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 176, 214, 0.18);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 176, 214, 0.32);
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  .shell-grid {
+    @apply bg-grid-fade;
+    background-size: 56px 56px;
+    background-position: -1px -1px;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 78%);
+  }
+
+  .panel {
+    @apply relative rounded-2xl border border-line bg-surface-raised/80 shadow-card backdrop-blur-[2px];
+  }
+
+  .panel-hover {
+    @apply transition-all duration-300 ease-refined hover:border-line-strong hover:bg-surface-overlay/70 hover:shadow-lift;
+  }
+
+  .eyebrow {
+    @apply text-2xs font-medium uppercase text-ink-faint;
+  }
+
+  .hairline {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-line-strong to-transparent;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-cyan-soft via-cyan to-violet-soft bg-clip-text text-transparent;
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+    @apply font-mono;
+  }
+
+  .link-quiet {
+    @apply text-ink-muted underline decoration-line-strong underline-offset-4 transition-colors hover:text-cyan-soft;
+  }
+}
+
+@layer utilities {
+  .animate-delay-1 {
+    animation-delay: 60ms;
+  }
+  .animate-delay-2 {
+    animation-delay: 120ms;
+  }
+  .animate-delay-3 {
+    animation-delay: 180ms;
+  }
+  .animate-delay-4 {
+    animation-delay: 240ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

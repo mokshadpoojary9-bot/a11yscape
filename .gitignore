@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+*.pem
+*.key
+*.cert
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Runtime data
+database/*.sqlite
+database/*.sqlite3
+database/*.db
+datasets/raw/*
+!datasets/raw/.gitkeep
+datasets/processed/*
+!datasets/processed/.gitkeep
+r-engine/data/*
+!r-engine/data/.gitkeep
+r-engine/reports/*
+!r-engine/reports/.gitkeep
+
+# Scanner artefacts
+scanner-service/screenshots/
+scanner-service/output/
+playwright-report/
+test-results/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+renv/library/
+
+# Misc
+coverage/
+.cache/
+temp/
+tmp/

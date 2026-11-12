@@ -1,0 +1,65 @@
+import { cloneElement, forwardRef, isValidElement, type ButtonHTMLAttributes, type ReactElement } from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+export const buttonVariants = cva(
+  'inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 ease-refined disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0',
+  {
+    variants: {
+      variant: {
+        primary:
+          'bg-cyan text-midnight-950 shadow-[0_1px_0_rgba(255,255,255,0.35)_inset,0_10px_30px_-14px_rgba(34,211,238,0.65)] hover:bg-cyan-soft active:translate-y-px',
+        secondary:
+          'border border-line-strong bg-surface-overlay/80 text-ink hover:border-cyan/30 hover:bg-surface-overlay hover:text-cyan-soft',
+        outline:
+          'border border-line-strong bg-transparent text-ink-muted hover:border-line-strong hover:bg-white/[0.03] hover:text-ink',
+        ghost: 'text-ink-muted hover:bg-white/[0.04] hover:text-ink',
+        subtle: 'bg-cyan-dim text-cyan-soft hover:bg-cyan/20',
+        violet: 'bg-violet-dim text-violet-soft hover:bg-violet/20',
+        danger: 'bg-severity-critical/12 text-severity-critical hover:bg-severity-critical/20',
+      },
+      size: {
+        sm: 'h-8 px-3 text-[13px]',
+        md: 'h-10 px-4',
+        lg: 'h-11 px-5',
+        icon: 'size-9',
+        'icon-sm': 'size-8',
+      },
+    },
+    defaultVariants: { variant: 'primary', size: 'md' },
+  },
+)
+
+export interface ButtonProps
+  extends ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  loading?: boolean
+  /** Render the single child element (e.g. a Router Link) with button styles. */
+  asChild?: boolean
+}
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { className, variant, size, loading = false, disabled, children, asChild = false, ...props },
+  ref,
+) {
+  if (asChild && isValidElement(children)) {
+    const child = children as ReactElement<{ className?: string }>
+    return cloneElement(child, {
+      className: cn(buttonVariants({ variant, size }), className, child.props.className),
+    })
+  }
+
+  return (
+    <button
+      ref={ref}
+      className={cn(buttonVariants({ variant, size }), className)}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...props}
+    >
+      {loading ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+      {children}
+    </button>
+  )
+})

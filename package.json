@@ -1,0 +1,20 @@
+{
+  "name": "a11yscape",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A11YSCAPE - The Digital Accessibility Intelligence Observatory",
+  "workspaces": [
+    "frontend",
+    "scanner-service"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace frontend",
+    "dev:scanner": "npm run dev --workspace scanner-service",
+    "build": "npm run build --workspace frontend",
+    "typecheck": "npm run typecheck --workspace frontend",
+    "preview": "npm run preview --workspace frontend"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}
