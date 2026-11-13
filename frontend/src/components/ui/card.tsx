@@ -12,7 +12,7 @@ interface CardHeaderProps extends HTMLAttributes<HTMLDivElement> {
 export function CardHeader({ className, children, actions, ...props }: CardHeaderProps) {
   return (
     <div
-      className={cn('flex flex-wrap items-start justify-between gap-3 px-5 pb-4 pt-5', className)}
+      className={cn('flex flex-wrap items-start justify-between gap-3 px-5 pb-4 pt-5 sm:px-6 sm:pt-6', className)}
       {...props}
     >
       <div className="min-w-0 space-y-1">{children}</div>
@@ -22,7 +22,12 @@ export function CardHeader({ className, children, actions, ...props }: CardHeade
 }
 
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn('text-[15px] font-medium leading-6 text-ink', className)} {...props} />
+  return (
+    <h3
+      className={cn('font-display text-[15px] font-medium leading-6 tracking-[-0.015em] text-ink', className)}
+      {...props}
+    />
+  )
 }
 
 export function CardDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
@@ -30,13 +35,13 @@ export function CardDescription({ className, ...props }: HTMLAttributes<HTMLPara
 }
 
 export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('px-5 pb-5', className)} {...props} />
+  return <div className={cn('px-5 pb-5 sm:px-6 sm:pb-6', className)} {...props} />
 }
 
 export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('flex items-center gap-3 border-t border-line px-5 py-3.5', className)}
+      className={cn('flex items-center gap-3 border-t border-line px-5 py-3.5 sm:px-6', className)}
       {...props}
     />
   )

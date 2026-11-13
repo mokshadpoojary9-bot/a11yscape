@@ -51,13 +51,19 @@ export function LogoMark({ size = 36, className }: { size?: number; className?: 
 export function Logo({ className, showWordmark = true, size = 36 }: LogoProps) {
   return (
     <div className={cn('flex items-center gap-3', className)}>
-      <LogoMark size={size} />
+      <span className="relative">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-2xl bg-cyan/20 blur-xl"
+        />
+        <LogoMark size={size} className="relative" />
+      </span>
       {showWordmark ? (
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold leading-none tracking-[0.19em] text-ink">
+          <p className="font-display text-[15px] font-semibold leading-none tracking-[0.17em] text-ink">
             A11YSCAPE
           </p>
-          <p className="mt-1.5 text-[10px] font-medium uppercase leading-none tracking-[0.15em] text-ink-faint">
+          <p className="mt-1.5 text-[9px] font-medium uppercase leading-[1.4] tracking-[0.14em] text-ink-faint">
             Intelligence Observatory
           </p>
         </div>

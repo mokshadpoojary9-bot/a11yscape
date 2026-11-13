@@ -97,6 +97,7 @@
 
   .panel {
     position: relative;
+    isolation: isolate;
     border-radius: 1.125rem;
     border: 1px solid rgba(148, 176, 214, 0.12);
     background:
@@ -133,6 +134,22 @@
 
   .panel-hover {
     @apply transition-all duration-300 ease-refined hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift;
+  }
+
+  .panel-hover::after {
+    content: '';
+    position: absolute;
+    inset-inline: 18%;
+    top: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(103, 232, 249, 0.55), transparent);
+    opacity: 0;
+    transition: opacity 300ms ease;
+    pointer-events: none;
+  }
+
+  .panel-hover:hover::after {
+    opacity: 1;
   }
 
   .hero-panel {
@@ -196,6 +213,10 @@
     animation: page-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
+  .instrument-strip {
+    @apply flex flex-wrap items-center gap-2.5 rounded-xl border border-line bg-midnight-950/35 px-3.5 py-2.5 backdrop-blur-sm;
+  }
+
   .display {
     @apply font-display;
     letter-spacing: -0.03em;
@@ -256,6 +277,34 @@
   }
   .animate-delay-4 {
     animation-delay: 240ms;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.996);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.55;
+  }
+  80% {
+    opacity: 0.1;
+  }
+  100% {
+    transform: translateY(520%);
+    opacity: 0;
   }
 }
 

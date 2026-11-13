@@ -13,9 +13,9 @@ interface SidebarProps {
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
   return cn(
-    'group relative flex items-start gap-3 rounded-lg px-3 py-2 text-[13.5px] transition-all duration-200 ease-refined',
+    'group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-2 text-[13px] transition-all duration-200 ease-refined',
     isActive
-      ? 'bg-cyan/[0.075] text-ink'
+      ? 'bg-[linear-gradient(90deg,rgba(34,211,238,0.12),rgba(63,109,255,0.07)_55%,transparent)] text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
       : 'text-ink-muted hover:bg-white/[0.035] hover:text-ink',
   )
 }
@@ -25,26 +25,41 @@ function ServiceFooter() {
   const analytics = useAnalyticsHealth()
   const scannerState = scanner.isPending ? 'checking' : scanner.isError ? 'offline' : 'online'
   const analyticsState = analytics.isPending ? 'checking' : analytics.isError ? 'offline' : 'online'
+  const bothOnline = scannerState === 'online' && analyticsState === 'online'
+  const anyChecking = scannerState === 'checking' || analyticsState === 'checking'
 
   return (
-    <div className="rounded-xl border border-line bg-midnight-900/50 p-3.5">
-      <p className="eyebrow mb-2.5">Instrument link</p>
-      <div className="space-y-2">
+    <div className="relative overflow-hidden rounded-xl border border-line bg-midnight-950/45 p-3.5">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-8 -top-10 size-24 rounded-full bg-cyan/[0.06] blur-2xl"
+      />
+      <div className="relative flex items-center justify-between gap-3">
+        <p className="eyebrow">Instrument link</p>
+        <span
+          className={cn(
+            'size-1.5 rounded-full',
+            bothOnline ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]' : anyChecking ? 'bg-ink-faint' : 'bg-severity-critical',
+          )}
+          aria-hidden="true"
+        />
+      </div>
+      <div className="relative mt-2.5 space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2 text-[12px] text-ink-muted">
+          <span className="flex items-center gap-2 text-[11.5px] text-ink-muted">
             <StatusDot state={scannerState} />
             Scanner service
           </span>
-          <span className="font-mono text-[10.5px] uppercase tracking-wider text-ink-faint">
+          <span className="font-mono text-[9.5px] uppercase tracking-wider text-ink-faint">
             {scannerState === 'online' ? 'ready' : scannerState}
           </span>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2 text-[12px] text-ink-muted">
+          <span className="flex items-center gap-2 text-[11.5px] text-ink-muted">
             <StatusDot state={analyticsState} />
             R engine
           </span>
-          <span className="font-mono text-[10.5px] uppercase tracking-wider text-ink-faint">
+          <span className="font-mono text-[9.5px] uppercase tracking-wider text-ink-faint">
             {analyticsState === 'online' ? 'ready' : analyticsState}
           </span>
         </div>
@@ -53,11 +68,42 @@ function ServiceFooter() {
   )
 }
 
+function PhaseProgress() {
+  return (
+    <div className="rounded-xl border border-line bg-midnight-950/35 p-3.5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="eyebrow">Mission pipeline</p>
+        <span className="font-mono text-[10px] text-cyan-soft/80">1 / 8</span>
+      </div>
+      <div
+        className="mt-2.5 h-1 overflow-hidden rounded-full bg-white/[0.055]"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={8}
+        aria-valuenow={1}
+        aria-label="Research phases complete"
+      >
+        <div className="h-full w-[12.5%] rounded-full bg-gradient-to-r from-cyan to-electric shadow-[0_0_12px_rgba(34,211,238,0.55)]" />
+      </div>
+      <p className="mt-2 text-[10.5px] leading-4 text-ink-faint">Foundation complete · Scanner next</p>
+    </div>
+  )
+}
+
 export function Sidebar({ open, onClose }: SidebarProps) {
   const content = (
-    <div className="flex h-full flex-col">
-      <div className="flex h-16 shrink-0 items-center justify-between px-5">
-        <NavLink to="/" onClick={onClose} aria-label="A11YSCAPE overview">
+    <div className="relative flex h-full flex-col">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(280px_180px_at_25%_0%,rgba(34,211,238,0.09),transparent_72%)]"
+      />
+      <div className="relative flex h-[68px] shrink-0 items-center justify-between px-5">
+        <NavLink
+          to="/"
+          onClick={onClose}
+          aria-label="A11YSCAPE overview"
+          className="rounded-lg transition-opacity hover:opacity-90"
+        >
           <Logo size={34} />
         </NavLink>
         <button
@@ -70,10 +116,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 pb-4" aria-label="Main">
+      <nav className="relative flex-1 overflow-y-auto px-3 pb-4" aria-label="Main">
         {navGroups.map((group) => (
           <div key={group.label} className="mb-5">
-            <p className="mb-2 px-3 text-[10px] font-medium uppercase tracking-[0.16em] text-ink-faint/80">
+            <p className="mb-2 px-3 text-[9.5px] font-medium uppercase tracking-[0.18em] text-ink-faint/70">
               {group.label}
             </p>
             <ul className="space-y-0.5">
@@ -83,16 +129,27 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     {({ isActive }) => (
                       <>
                         {isActive ? (
-                          <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-cyan" />
+                          <>
+                            <span className="absolute inset-y-1 left-0 w-px rounded-full bg-gradient-to-b from-cyan/10 via-cyan to-violet/30 shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
+                            <span
+                              aria-hidden="true"
+                              className="pointer-events-none absolute inset-0 bg-[radial-gradient(180px_80px_at_0%_50%,rgba(34,211,238,0.06),transparent_75%)]"
+                            />
+                          </>
                         ) : null}
                         <item.icon
                           className={cn(
-                            'mt-0.5 size-4 shrink-0 transition-colors',
-                            isActive ? 'text-cyan' : 'text-ink-faint group-hover:text-ink-muted',
+                            'relative size-4 shrink-0 transition-colors',
+                            isActive
+                              ? 'text-cyan-soft drop-shadow-[0_0_5px_rgba(34,211,238,0.35)]'
+                              : 'text-ink-faint group-hover:text-ink-muted',
                           )}
                           aria-hidden="true"
                         />
-                        <span className="min-w-0 flex-1 leading-5">{item.label}</span>
+                        <span className="relative min-w-0 flex-1 truncate leading-5">{item.label}</span>
+                        {isActive ? (
+                          <span className="relative size-1 rounded-full bg-cyan shadow-[0_0_7px_rgba(34,211,238,0.8)]" aria-hidden="true" />
+                        ) : null}
                       </>
                     )}
                   </NavLink>
@@ -103,12 +160,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="shrink-0 space-y-3 border-t border-line p-3">
+      <div className="relative shrink-0 space-y-3 border-t border-line p-3">
         <NavLink to={settingsNav.to} onClick={onClose} className={navLinkClass}>
           {({ isActive }) => (
             <>
               <settingsNav.icon
-                className={cn('mt-0.5 size-4 shrink-0', isActive ? 'text-cyan' : 'text-ink-faint')}
+                className={cn('size-4 shrink-0', isActive ? 'text-cyan-soft' : 'text-ink-faint')}
                 aria-hidden="true"
               />
               <span>{settingsNav.label}</span>
@@ -116,10 +173,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           )}
         </NavLink>
         <ServiceFooter />
-        <p className="px-1 font-mono text-[10px] leading-4 text-ink-faint/80">
-          A11YSCAPE v0.1 — Phase 1
-          <br />
-          Research build · local services
+        <PhaseProgress />
+        <p className="px-1 pb-1 font-mono text-[9.5px] leading-4 text-ink-faint/75">
+          A11YSCAPE v0.1 · Research build
         </p>
       </div>
     </div>
@@ -127,11 +183,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[268px] border-r border-line bg-midnight-900/60 backdrop-blur-xl lg:block">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[268px] border-r border-line bg-[linear-gradient(180deg,rgba(10,16,31,0.92),rgba(6,10,20,0.88))] backdrop-blur-2xl lg:block">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-cyan/15 to-transparent" />
         {content}
       </aside>
 
-      {/* Mobile drawer */}
       <div
         className={cn(
           'fixed inset-0 z-50 lg:hidden',
@@ -141,7 +197,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       >
         <div
           className={cn(
-            'absolute inset-0 bg-midnight-950/70 backdrop-blur-sm transition-opacity duration-300',
+            'absolute inset-0 bg-midnight-950/75 backdrop-blur-sm transition-opacity duration-300',
             open ? 'opacity-100' : 'opacity-0',
           )}
           onClick={onClose}

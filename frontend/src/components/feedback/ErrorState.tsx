@@ -30,6 +30,7 @@ export function ErrorState({
   error,
   title = 'Could not load this view',
   onRetry,
+  compact = false,
   className,
 }: ErrorStateProps) {
   const { message, hint } = describeError(error)
@@ -37,21 +38,30 @@ export function ErrorState({
     <div
       role="alert"
       className={cn(
-        'rounded-2xl border border-severity-critical/20 bg-severity-critical/[0.045] px-5 py-5',
+        'relative overflow-hidden rounded-xl border border-severity-critical/20 bg-[linear-gradient(120deg,rgba(240,86,122,0.06),rgba(5,8,16,0.4))]',
+        compact ? 'px-4 py-3.5' : 'px-5 py-5',
         className,
       )}
     >
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-severity-critical/60 to-transparent"
+      />
       <div className="flex items-start gap-3">
-        <TriangleAlert className="mt-0.5 size-4.5 shrink-0 text-severity-critical" aria-hidden="true" />
+        <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg border border-severity-critical/20 bg-severity-critical/[0.07]">
+          <TriangleAlert className="size-3.5 text-severity-critical" aria-hidden="true" />
+        </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-medium text-ink">{title}</p>
-          <p className="mt-1.5 break-words text-[13px] leading-6 text-ink-muted">{message}</p>
-          {hint ? <p className="mt-1 text-[12.5px] leading-5 text-ink-faint">{hint}</p> : null}
+          <p className={cn('font-medium text-ink', compact ? 'text-[13px]' : 'text-[14px]')}>
+            {title}
+          </p>
+          <p className="mt-1.5 break-words text-[12.5px] leading-5.5 text-ink-muted">{message}</p>
+          {hint ? <p className="mt-1 text-[12px] leading-5 text-ink-faint">{hint}</p> : null}
           {onRetry ? (
             <Button
               variant="outline"
               size="sm"
-              className="mt-3.5"
+              className="mt-3"
               onClick={onRetry}
               aria-label="Retry request"
             >
