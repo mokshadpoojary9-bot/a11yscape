@@ -17,6 +17,12 @@ const priorityTone: Record<RecommendationPriority, 'critical' | 'moderate' | 'mi
   low: 'minor',
 }
 
+const priorityRail: Record<RecommendationPriority, string> = {
+  high: 'bg-severity-critical/70',
+  medium: 'bg-severity-moderate/70',
+  low: 'bg-severity-minor/70',
+}
+
 export function RecommendationsPage() {
   const recommendations = useRecommendations()
 
@@ -72,6 +78,22 @@ export function RecommendationsPage() {
         />
       ) : (
         <div className="space-y-6">
+          <div className="grid gap-3 sm:grid-cols-3">
+            {(['high', 'medium', 'low'] as RecommendationPriority[]).map((priority) => (
+              <div key={priority} className="panel relative overflow-hidden p-4">
+                <span
+                  aria-hidden="true"
+                  className={`severity-rail ${priorityRail[priority]}`}
+                />
+                <p className="eyebrow capitalize">{priority} priority</p>
+                <p className="num mt-1.5 text-[20px] text-ink">{grouped[priority]?.length ?? 0}</p>
+                <p className="mt-0.5 text-[11.5px] text-ink-faint">
+                  {(grouped[priority]?.length ?? 0) === 1 ? 'recommendation' : 'recommendations'}
+                </p>
+              </div>
+            ))}
+          </div>
+
           {(['high', 'medium', 'low'] as RecommendationPriority[]).map((priority) => {
             const items = grouped[priority]
             if (!items || items.length === 0) return null
@@ -83,7 +105,11 @@ export function RecommendationsPage() {
                 </div>
                 <div className="grid gap-4 lg:grid-cols-2">
                   {items.map((item) => (
-                    <Card key={item.id}>
+                    <Card key={item.id} className="relative overflow-hidden">
+                      <span
+                        aria-hidden="true"
+                        className={`severity-rail ${priorityRail[item.priority]}`}
+                      />
                       <CardContent className="pt-5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -100,7 +126,7 @@ export function RecommendationsPage() {
                             </Badge>
                           ))}
                         </div>
-                        <div className="mt-3.5 grid gap-2 border-t border-line pt-3 text-[12px] text-ink-faint sm:grid-cols-2">
+                        <div className="mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-3 text-[12px] text-ink-faint">
                           <p>
                             <span className="num text-ink-muted">{item.affectedScans}</span> affected scans
                           </p>
@@ -108,6 +134,27 @@ export function RecommendationsPage() {
                             <span className="num text-ink-muted">{item.affectedDomains.length}</span> domains
                           </p>
                         </div>
+                        {item.affectedDomains.length > 0 ? (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {item.affectedDomains.slice(0, 3).map((domain) => (
+                              <span
+                                key={domain}
+                                className="max-w-[180px] truncate rounded-md border border-line bg-midnight-950/50 px-1.5 py-0.5 font-mono text-[10px] text-ink-faint"
+                                title={domain}
+                              >
+                                {domain}
+                              </span>
+                            ))}
+                            {item.affectedDomains.length > 3 ? (
+                              <span
+                                className="rounded-md border border-line bg-midnight-950/50 px-1.5 py-0.5 font-mono text-[10px] text-ink-faint"
+                                title={item.affectedDomains.slice(3).join(', ')}
+                              >
+                                +{item.affectedDomains.length - 3}
+                              </span>
+                            ) : null}
+                          </div>
+                        ) : null}
                         <p className="mt-3 flex gap-2 text-[12.5px] leading-5 text-ink-muted">
                           <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-emerald-300" aria-hidden="true" />
                           {item.remediation}

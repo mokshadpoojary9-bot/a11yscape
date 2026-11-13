@@ -20,6 +20,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ServiceStatusChip } from '@/components/feedback/StatusPill'
 import { ErrorState } from '@/components/feedback/ErrorState'
+import { HeroInstrument } from '@/three/HeroInstrument'
+import { useSettings } from '@/hooks/useSettings'
 import { useDatasetStats, useScannerHealth } from '@/services/queries'
 import { formatDateTime, formatNumber } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -55,6 +57,7 @@ const phaseBadge: Record<PhaseState, { tone: 'success' | 'cyan' | 'neutral'; lab
 export function OverviewPage() {
   const statsQuery = useDatasetStats()
   const scannerHealth = useScannerHealth()
+  const { settings } = useSettings()
   const stats = statsQuery.data
   const offline = statsQuery.isError
   const loading = statsQuery.isPending
@@ -65,62 +68,123 @@ export function OverviewPage() {
         eyebrow="Mission control"
         title="Overview"
         description="A research observatory for detectable digital accessibility problems. Collect real evidence from public websites, analyse it in R, and visualise the findings without embellishment."
-        actions={
-          <>
-            <Button variant="secondary" asChild>
-              <Link to="/dataset">
-                <Database aria-hidden="true" />
-                Dataset
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link to="/scanner">
-                <Radar aria-hidden="true" />
-                New scan
-              </Link>
-            </Button>
-          </>
-        }
       />
 
-      {/* Observatory status band */}
-      <section className="panel relative overflow-hidden animate-fade-up animate-delay-1">
+      {/* Observatory hero */}
+      <section className="hero-panel animate-fade-up animate-delay-1">
+        <div aria-hidden="true" className="grain pointer-events-none absolute inset-0" />
+        <div aria-hidden="true" className="holo-grid pointer-events-none absolute inset-0 opacity-50" />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(700px_300px_at_88%_-30%,rgba(34,211,238,0.12),transparent_65%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(720px_320px_at_88%_-20%,rgba(34,211,238,0.12),transparent_66%)]"
         />
-        <div className="relative grid gap-8 p-6 sm:p-7 lg:grid-cols-[1.6fr_1fr] lg:items-center">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge tone="cyan">Phase 1 · Foundation</Badge>
-              <Badge tone="neutral">Local research build</Badge>
+
+        <div className="relative grid gap-6 p-6 sm:p-7 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-8 lg:p-9">
+          <div className="relative z-10">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-soft/90">
+                <span className="size-1.5 animate-pulse-soft rounded-full bg-cyan shadow-glow-cyan" aria-hidden="true" />
+                Research observatory
+              </span>
+              <span className="h-3 w-px bg-line-strong" aria-hidden="true" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
+                Phase 1 · Foundation
+              </span>
             </div>
-            <h2 className="max-w-xl text-[22px] font-semibold leading-snug text-ink sm:text-[25px]">
-              The observatory is installed. Instruments arrive phase by phase.
+
+            <h2 className="hero-title mt-4 max-w-[19ch] text-ink">
+              The observatory is installed.{' '}
+              <span className="text-gradient-warm">Instruments arrive phase by phase.</span>
             </h2>
-            <p className="max-w-xl text-[13.5px] leading-6 text-ink-muted">
+
+            <p className="mt-4 max-w-[48ch] text-[13.5px] leading-6 text-ink-muted">
               This release establishes the interface, design system and service topology. Scan
-              collection, the R analytical engine and the 3D universe are not yet connected — this
-              dashboard reports that honestly rather than displaying invented measurements.
+              collection, the R analytical engine and the spatial universe are not connected yet —
+              the observatory reports that honestly instead of displaying invented measurements.
             </p>
-            <div className="flex flex-wrap items-center gap-2">
+
+            <div className="mt-6 flex flex-wrap items-center gap-2.5">
+              <Button asChild>
+                <Link to="/scanner">
+                  <Radar aria-hidden="true" />
+                  Begin a scan
+                </Link>
+              </Button>
+              <Button variant="secondary" asChild>
+                <Link to="/dataset">
+                  <Database aria-hidden="true" />
+                  Inspect dataset
+                </Link>
+              </Button>
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-2">
               <ServiceStatusChip service="scanner" />
               <ServiceStatusChip service="analytics" />
+              <span className="instrument-chip">WCAG 2.2</span>
+            </div>
+
+            <dl className="mt-6 grid max-w-md grid-cols-3 gap-px overflow-hidden rounded-xl border border-line bg-line/40">
+              {[
+                { label: 'Surfaces', value: '9' },
+                { label: 'Phases', value: '8' },
+                { label: 'Analytics', value: 'R' },
+              ].map((item) => (
+                <div key={item.label} className="bg-midnight-950/55 px-3.5 py-2.5">
+                  <dt className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-ink-faint">
+                    {item.label}
+                  </dt>
+                  <dd className="mt-1 font-mono text-[13px] text-ink">{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="relative">
+            <div className="stage-vignette pointer-events-none absolute inset-0 rounded-2xl" aria-hidden="true" />
+            <div className="relative mx-auto aspect-square w-full max-w-[420px] select-none sm:max-w-[460px] lg:max-w-none">
+              <div
+                aria-hidden="true"
+                className="absolute inset-[14%] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.16),rgba(63,109,255,0.08)_45%,transparent_70%)] blur-2xl"
+              />
+              <div className="absolute inset-0" aria-hidden="true">
+                <HeroInstrument reducedMotion={settings.reduceMotion} />
+              </div>
+
+              <span className="instrument-chip pointer-events-none absolute left-1 top-1">
+                Calibration field 01
+              </span>
+              <span className="instrument-chip pointer-events-none absolute right-1 top-1 hidden sm:inline-flex">
+                axe-core · R
+              </span>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3">
+                <span className="font-mono text-[9.5px] uppercase leading-4 tracking-[0.12em] text-ink-faint">
+                  Instrument reference
+                  <br />
+                  Not a data projection
+                </span>
+                <span className="instrument-chip hidden sm:inline-flex">
+                  <span className="size-1 rounded-full bg-violet-soft" aria-hidden="true" />
+                  Standby
+                </span>
+              </div>
+
+              {/* Corner calibration brackets */}
+              <span aria-hidden="true" className="absolute left-0 top-0 size-4 border-l border-t border-cyan/30" />
+              <span aria-hidden="true" className="absolute right-0 top-0 size-4 border-r border-t border-cyan/30" />
+              <span aria-hidden="true" className="absolute bottom-0 left-0 size-4 border-b border-l border-cyan/30" />
+              <span aria-hidden="true" className="absolute bottom-0 right-0 size-4 border-b border-r border-cyan/30" />
             </div>
           </div>
-          <dl className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'Surfaces', value: '9' },
-              { label: 'Phases', value: '8' },
-              { label: 'Analytics', value: 'R' },
-              { label: 'Standards', value: 'WCAG 2.2' },
-            ].map((item) => (
-              <div key={item.label} className="rounded-xl border border-line bg-midnight-950/40 px-4 py-3">
-                <dt className="eyebrow">{item.label}</dt>
-                <dd className="mt-1.5 font-mono text-[15px] text-ink">{item.value}</dd>
-              </div>
-            ))}
-          </dl>
+        </div>
+
+        <div className="relative flex flex-wrap items-center justify-between gap-2 border-t border-line/70 px-6 py-3 sm:px-7 lg:px-9">
+          <p className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-ink-faint">
+            Collection → Storage → Statistics → Models → Visualisation
+          </p>
+          <p className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-ink-faint">
+            Local research build · v0.1.0
+          </p>
         </div>
       </section>
 

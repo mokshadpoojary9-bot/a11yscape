@@ -1,16 +1,17 @@
 import { useState, type FormEvent } from 'react'
-import { Download, FileText, FileSpreadsheet, Plus } from 'lucide-react'
+import { Braces, Download, FileCode2, FileText, FileSpreadsheet, Plus } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FieldError, Input, Label, Select } from '@/components/ui/input'
+import { FieldError, Input, Label } from '@/components/ui/input'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { TableSkeleton } from '@/components/feedback/LoadingState'
 import { useAnalyticsHealth, useGenerateReport, useReports } from '@/services/queries'
 import { formatDateTime } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import type { ReportRecord } from '@/types'
 
 function formatBytes(bytes: number): string {
@@ -26,6 +27,18 @@ const formatTone: Record<ReportRecord['format'], 'cyan' | 'violet' | 'neutral' |
   html: 'violet',
   pdf: 'neutral',
 }
+
+const reportFormats: Array<{
+  value: ReportRecord['format']
+  label: string
+  detail: string
+  icon: typeof FileText
+}> = [
+  { value: 'csv', label: 'CSV', detail: 'Dataset extract', icon: FileSpreadsheet },
+  { value: 'json', label: 'JSON', detail: 'Full scan records', icon: Braces },
+  { value: 'html', label: 'HTML', detail: 'Analytical summary', icon: FileCode2 },
+  { value: 'pdf', label: 'PDF', detail: 'Formatted report', icon: FileText },
+]
 
 export function ReportsPage() {
   const reports = useReports()
@@ -98,23 +111,68 @@ export function ReportsPage() {
                   <FieldError>{titleError}</FieldError>
                 </span>
               </div>
-              <div>
-                <Label htmlFor="report-format">Format</Label>
-                <Select
-                  id="report-format"
-                  value={format}
-                  onChange={(event) => setFormat(event.target.value as ReportRecord['format'])}
-                >
-                  <option value="csv">CSV — dataset extract</option>
-                  <option value="json">JSON — full scan records</option>
-                  <option value="html">HTML — analytical summary</option>
-                  <option value="pdf">PDF — formatted report</option>
-                </Select>
-              </div>
+              <fieldset>
+                <legend className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.08em] text-ink-muted">
+                  Format
+                </legend>
+                <div className="grid grid-cols-2 gap-2">
+                  {reportFormats.map((option) => {
+                    const selected = format === option.value
+                    return (
+                      <label
+                        key={option.value}
+                        className={cn(
+                          'flex cursor-pointer items-start gap-2.5 rounded-lg border px-2.5 py-2 transition-colors focus-within:shadow-focus',
+                          selected
+                            ? 'border-cyan/40 bg-cyan/[0.07]'
+                            : 'border-line-strong bg-midnight-900/50 hover:bg-white/[0.03]',
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="report-format"
+                          value={option.value}
+                          checked={selected}
+                          onChange={() => setFormat(option.value)}
+                          className="sr-only"
+                        />
+                        <option.icon
+                          className={cn(
+                            'mt-0.5 size-4 shrink-0',
+                            selected ? 'text-cyan-soft' : 'text-ink-faint',
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className="min-w-0">
+                          <span className="block font-mono text-[11.5px] text-ink">{option.label}</span>
+                          <span className="mt-0.5 block text-[10.5px] leading-4 text-ink-faint">
+                            {option.detail}
+                          </span>
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </fieldset>
               <Button type="submit" className="w-full" loading={generate.isPending}>
                 <Plus aria-hidden="true" />
                 {generate.isPending ? 'Generating' : 'Generate report'}
               </Button>
+
+              <div className="rounded-lg border border-line bg-midnight-950/40 p-3.5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="eyebrow">Structure preview</p>
+                  <Badge tone={formatTone[format]}>{format.toUpperCase()}</Badge>
+                </div>
+                <ul className="mt-2 space-y-1 text-[11px] leading-4 text-ink-faint">
+                  <li>Cover · title and generation timestamp</li>
+                  <li>Dataset · scan and violation records</li>
+                  <li>Analysis · severity and WCAG summaries</li>
+                </ul>
+                <p className="mt-2 text-[10px] text-ink-faint/80">
+                  Outline only — the content is written by the R engine.
+                </p>
+              </div>
             </form>
 
             {generate.isError ? (
@@ -140,7 +198,9 @@ export function ReportsPage() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader
+            actions={reports.isSuccess && reports.data.length > 0 ? <Badge tone="neutral">{reports.data.length}</Badge> : undefined}
+          >
             <CardTitle>Export archive</CardTitle>
             <p className="text-[12.5px] text-ink-faint">Files registered by the analytical engine.</p>
           </CardHeader>

@@ -1,6 +1,9 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -22,7 +25,7 @@ import { useScans } from '@/services/queries'
 import { useSettings } from '@/hooks/useSettings'
 import { formatDateTime, formatDuration, formatNumber, hostnameOf } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import type { ScanFilters, ScanRecord, ScanStatus, Severity } from '@/types'
+import { SEVERITY_ORDER, type ScanFilters, type ScanRecord, type ScanStatus, type Severity } from '@/types'
 
 const severityLabel: Record<Severity, string> = {
   critical: 'Critical',
@@ -48,6 +51,59 @@ const statusTone: Record<ScanStatus, 'success' | 'cyan' | 'neutral' | 'critical'
 
 const PAGE_SIZES = [10, 20, 50]
 
+type SortKey = 'target' | 'status' | 'pages' | 'issues' | 'severity' | 'duration' | 'captured'
+type SortDirection = 'asc' | 'desc'
+
+function severityTotal(scan: ScanRecord): number {
+  return SEVERITY_ORDER.reduce((total, severity) => total + (scan.violationsBySeverity?.[severity] ?? 0), 0)
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  activeKey,
+  direction,
+  onSort,
+  align = 'left',
+}: {
+  label: string
+  sortKey: SortKey
+  activeKey: SortKey | null
+  direction: SortDirection
+  onSort: (key: SortKey) => void
+  align?: 'left' | 'right'
+}) {
+  const active = activeKey === sortKey
+  return (
+    <th
+      scope="col"
+      aria-sort={active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+      className={cn('px-4 py-3 font-medium', align === 'right' && 'text-right')}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={cn(
+          'inline-flex items-center gap-1.5 rounded-sm uppercase tracking-[0.08em] transition-colors hover:text-ink',
+          align === 'right' && 'flex-row-reverse',
+          active ? 'text-ink' : 'text-ink-faint',
+        )}
+      >
+        {label}
+        {active ? (
+          direction === 'asc' ? (
+            <ArrowUp className="size-3 text-cyan-soft" aria-hidden="true" />
+          ) : (
+            <ArrowDown className="size-3 text-cyan-soft" aria-hidden="true" />
+          )
+        ) : (
+          <ArrowUpDown className="size-3 opacity-50" aria-hidden="true" />
+        )}
+      </button>
+    </th>
+  )
+}
+
 export function DatasetPage() {
   const [query, setQuery] = useState('')
   const [severity, setSeverity] = useState<Severity | 'all'>('all')
@@ -55,6 +111,8 @@ export function DatasetPage() {
   const [pageSize, setPageSize] = useState(20)
   const [page, setPage] = useState(1)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   const deferredQuery = useDeferredValue(query.trim())
   const { settings } = useSettings()
@@ -71,6 +129,42 @@ export function DatasetPage() {
   )
 
   const scans = useScans(filters)
+
+  const records = useMemo(() => {
+    const list = scans.data?.records ?? []
+    if (!sortKey) return list
+    const factor = sortDirection === 'asc' ? 1 : -1
+    return [...list].sort((a, b) => {
+      switch (sortKey) {
+        case 'target':
+          return factor * (a.pageTitle ?? a.domain).localeCompare(b.pageTitle ?? b.domain)
+        case 'status':
+          return factor * a.status.localeCompare(b.status)
+        case 'pages':
+          return factor * (a.pagesScanned - b.pagesScanned)
+        case 'issues':
+          return factor * (a.issueCount - b.issueCount)
+        case 'severity':
+          return factor * (severityTotal(a) - severityTotal(b))
+        case 'duration':
+          return factor * ((a.durationMs ?? 0) - (b.durationMs ?? 0))
+        case 'captured':
+          return factor * a.startedAt.localeCompare(b.startedAt)
+        default:
+          return 0
+      }
+    })
+  }, [scans.data, sortKey, sortDirection])
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'))
+      return
+    }
+    setSortKey(key)
+    setSortDirection(key === 'captured' ? 'desc' : 'asc')
+  }
+
   const total = scans.data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const hasActiveFilters = Boolean(deferredQuery) || severity !== 'all' || status !== 'all'
@@ -199,6 +293,20 @@ export function DatasetPage() {
                   'Dataset unavailable'
                 )}
               </span>
+              {sortKey ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <ArrowUpDown className="size-3.5" aria-hidden="true" />
+                  Sorted by{' '}
+                  <span className="text-ink-muted capitalize">{sortKey}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSortKey(null)}
+                    className="rounded-sm underline decoration-line-strong underline-offset-4 transition-colors hover:text-ink"
+                  >
+                    Reset
+                  </button>
+                </span>
+              ) : null}
               {hasActiveFilters ? (
                 <Button variant="ghost" size="sm" onClick={resetFilters}>
                   <FilterX aria-hidden="true" />
@@ -250,18 +358,20 @@ export function DatasetPage() {
             <table className="w-full min-w-[900px] text-left">
               <thead>
                 <tr className="border-b border-line text-2xs uppercase tracking-[0.08em] text-ink-faint">
-                  <th scope="col" className="w-10 px-4 py-3" />
-                  <th scope="col" className="px-4 py-3 font-medium">Target</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Status</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Pages</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Issues</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Severity</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Duration</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Captured</th>
+                  <th scope="col" className="w-10 px-4 py-3">
+                    <span className="sr-only">Expand record</span>
+                  </th>
+                  <SortHeader label="Target" sortKey="target" activeKey={sortKey} direction={sortDirection} onSort={handleSort} />
+                  <SortHeader label="Status" sortKey="status" activeKey={sortKey} direction={sortDirection} onSort={handleSort} />
+                  <SortHeader label="Pages" sortKey="pages" activeKey={sortKey} direction={sortDirection} onSort={handleSort} align="right" />
+                  <SortHeader label="Issues" sortKey="issues" activeKey={sortKey} direction={sortDirection} onSort={handleSort} align="right" />
+                  <SortHeader label="Severity" sortKey="severity" activeKey={sortKey} direction={sortDirection} onSort={handleSort} />
+                  <SortHeader label="Duration" sortKey="duration" activeKey={sortKey} direction={sortDirection} onSort={handleSort} align="right" />
+                  <SortHeader label="Captured" sortKey="captured" activeKey={sortKey} direction={sortDirection} onSort={handleSort} />
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {scans.data.records.map((scan) => (
+                {records.map((scan) => (
                   <ScanRows
                     key={scan.id}
                     scan={scan}
@@ -277,8 +387,13 @@ export function DatasetPage() {
             <p className="text-[12.5px] text-ink-faint">
               Page <span className="num text-ink-muted">{page}</span> of{' '}
               <span className="num text-ink-muted">{totalPages}</span> · showing{' '}
-              <span className="num text-ink-muted">{scans.data.records.length}</span> of{' '}
+              <span className="num text-ink-muted">{records.length}</span> of{' '}
               <span className="num text-ink-muted">{total}</span>
+              {sortKey ? (
+                <span className="ml-1.5 text-ink-faint/80">
+                  · sorting applies to this page only
+                </span>
+              ) : null}
             </p>
             <div className="flex items-center gap-2">
               <Button

@@ -55,8 +55,8 @@ function Toggle({
       >
         <span
           className={cn(
-            'absolute top-0.5 size-4.5 rounded-full bg-midnight-950 shadow transition-all duration-200',
-            checked ? 'left-[1.15rem]' : 'left-0.5',
+            'absolute top-0.5 size-4 rounded-full bg-midnight-950 shadow transition-all duration-200',
+            checked ? 'left-[1.25rem]' : 'left-0.5',
           )}
         />
       </button>
@@ -68,6 +68,10 @@ export function SettingsPage() {
   const { settings, updateSettings, resetSettings } = useSettings()
   const scannerHealth = useScannerHealth()
   const analyticsHealth = useAnalyticsHealth()
+  const telemetry = [
+    { label: 'Scanner service', service: 'scanner' as const, health: scannerHealth },
+    { label: 'R analytics engine', service: 'analytics' as const, health: analyticsHealth },
+  ]
 
   const [scannerUrl, setScannerUrl] = useState(settings.scannerBaseUrl)
   const [analyticsUrl, setAnalyticsUrl] = useState(settings.analyticsBaseUrl)
@@ -210,6 +214,56 @@ export function SettingsPage() {
         </Card>
 
         <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Instrument telemetry</CardTitle>
+              <p className="text-[12.5px] text-ink-faint">
+                Reported by the configured endpoints. Nothing is inferred locally.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-2.5 pt-0">
+              {telemetry.map((item) => (
+                <div key={item.service} className="rounded-lg border border-line bg-midnight-950/40 px-3.5 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[12.5px] text-ink-muted">{item.label}</p>
+                    <ServiceStatusChip service={item.service} showLabel={false} />
+                  </div>
+                  {item.health.data ? (
+                    <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[10.5px] text-ink-faint">
+                      <div className="col-span-2 flex items-baseline justify-between gap-2">
+                        <dt className="uppercase tracking-[0.08em]">Service</dt>
+                        <dd className="truncate text-ink-muted">
+                          {item.health.data.version ? `v${item.health.data.version}` : item.health.data.status} ·{' '}
+                          {item.health.data.service}
+                        </dd>
+                      </div>
+                      <div className="flex items-baseline justify-between gap-2">
+                        <dt className="uppercase tracking-[0.08em]">Uptime</dt>
+                        <dd className="text-ink-muted">
+                          {typeof item.health.data.uptimeSeconds === 'number'
+                            ? `${Math.floor(item.health.data.uptimeSeconds / 60)}m`
+                            : '—'}
+                        </dd>
+                      </div>
+                      <div className="flex items-baseline justify-between gap-2">
+                        <dt className="uppercase tracking-[0.08em]">Queue</dt>
+                        <dd className="text-ink-muted">
+                          {typeof item.health.data.queueDepth === 'number'
+                            ? item.health.data.queueDepth
+                            : '—'}
+                        </dd>
+                      </div>
+                    </dl>
+                  ) : (
+                    <p className="mt-2 font-mono text-[10.5px] text-ink-faint">
+                      {item.health.isPending ? 'Probing endpoint…' : 'No response from this endpoint.'}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Interface</CardTitle>

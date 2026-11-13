@@ -12,6 +12,7 @@ import { PanelSkeleton } from '@/components/feedback/LoadingState'
 import { ServiceStatusChip } from '@/components/feedback/StatusPill'
 import { SeverityBar } from '@/charts/SeverityBar'
 import { DomainIssueBar } from '@/charts/DomainIssueBar'
+import { CorrelationMatrix } from '@/charts/CorrelationMatrix'
 import { useAnalyticsHealth, useLatestAnalysis, useRunAnalysis } from '@/services/queries'
 import { formatDateTime, formatDecimal, formatNumber } from '@/lib/format'
 
@@ -22,6 +23,7 @@ export function AnalysisPage() {
   const run = useRunAnalysis()
   const result = run.data ?? analysis.data ?? null
   const offline = health.isError
+  const wcagMax = Math.max(1, ...(result?.wcagSummary.map((item) => item.violationCount) ?? [0]))
 
   return (
     <div className="space-y-7">
@@ -115,17 +117,31 @@ export function AnalysisPage() {
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              { label: 'Dataset rows', value: formatNumber(result.datasetRows) },
-              { label: 'Method', value: result.method },
-              { label: 'Computed at', value: formatDateTime(result.createdAt) },
+              {
+                label: 'Dataset rows',
+                value: formatNumber(result.datasetRows),
+                hint: 'Rows supplied to the engine',
+              },
+              { label: 'Method', value: result.method, hint: 'Method declared by R' },
+              {
+                label: 'Computed at',
+                value: formatDateTime(result.createdAt),
+                hint: 'Timestamp emitted with the run',
+              },
               {
                 label: 'Correlation',
                 value: result.correlation ? `${result.correlation.variables.length} variables` : 'Not requested',
+                hint: 'Pairwise coefficient matrix',
               },
             ].map((item) => (
-              <div key={item.label} className="panel p-5">
+              <div key={item.label} className="panel relative overflow-hidden p-5">
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan/45 to-transparent"
+                />
                 <p className="eyebrow">{item.label}</p>
-                <p className="mt-2.5 truncate font-mono text-[15px] text-ink">{item.value}</p>
+                <p className="mt-2.5 truncate font-mono text-[14px] text-ink">{item.value}</p>
+                <p className="mt-1.5 truncate text-[11px] text-ink-faint">{item.hint}</p>
               </div>
             ))}
           </div>
@@ -210,15 +226,23 @@ export function AnalysisPage() {
                     {result.wcagSummary.map((criterion) => (
                       <li
                         key={criterion.criterion}
-                        className="flex items-start justify-between gap-3 rounded-lg border border-line bg-midnight-950/35 px-3 py-2.5"
+                        className="rounded-lg border border-line bg-midnight-950/35 px-3 py-2.5"
                       >
-                        <div className="min-w-0">
-                          <p className="font-mono text-[11.5px] text-cyan-soft">{criterion.criterion}</p>
-                          <p className="mt-0.5 truncate text-[12px] text-ink-muted">{criterion.title}</p>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-mono text-[11.5px] text-cyan-soft">{criterion.criterion}</p>
+                            <p className="mt-0.5 truncate text-[12px] text-ink-muted">{criterion.title}</p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <Badge tone="neutral">{criterion.level}</Badge>
+                            <span className="num text-[12.5px] text-ink">{criterion.violationCount}</span>
+                          </div>
                         </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          <Badge tone="neutral">{criterion.level}</Badge>
-                          <span className="num text-[12.5px] text-ink">{criterion.violationCount}</span>
+                        <div className="meter mt-2.5 h-1">
+                          <div
+                            className="meter-fill"
+                            style={{ width: `${Math.max(3, (criterion.violationCount / wcagMax) * 100)}%` }}
+                          />
                         </div>
                       </li>
                     ))}
@@ -227,6 +251,24 @@ export function AnalysisPage() {
               </CardContent>
             </Card>
           </div>
+
+          {result.correlation && result.correlation.variables.length > 0 && result.correlation.matrix.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Correlation matrix</CardTitle>
+                <p className="text-[12.5px] text-ink-faint">
+                  Pairwise coefficients emitted by the R run. Colour encodes magnitude and sign; the
+                  values are not recomputed in the browser.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <CorrelationMatrix
+                  variables={result.correlation.variables}
+                  matrix={result.correlation.matrix}
+                />
+              </CardContent>
+            </Card>
+          ) : null}
 
           <Card>
             <CardHeader>

@@ -10,6 +10,7 @@ import { UniverseScene } from '@/three/UniverseScene'
 import { useSettings } from '@/hooks/useSettings'
 import { useDatasetStats } from '@/services/queries'
 import { formatNumber } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 export function UniversePage() {
   const [autoRotate, setAutoRotate] = useState(true)
@@ -53,6 +54,11 @@ export function UniversePage() {
           className="pointer-events-none absolute inset-0 opacity-[0.35] bg-grid-fade [background-size:44px_44px] [mask-image:radial-gradient(circle_at_50%_50%,black,transparent_76%)]"
         />
 
+        <span aria-hidden="true" className="pointer-events-none absolute left-4 top-4 z-10 size-4 border-l border-t border-cyan/30" />
+        <span aria-hidden="true" className="pointer-events-none absolute right-4 top-4 z-10 size-4 border-r border-t border-cyan/30" />
+        <span aria-hidden="true" className="pointer-events-none absolute bottom-4 left-4 z-10 size-4 border-b border-l border-cyan/30" />
+        <span aria-hidden="true" className="pointer-events-none absolute bottom-4 right-4 z-10 size-4 border-b border-r border-cyan/30" />
+
         <div className="relative h-[440px] w-full sm:h-[540px]">
           <Suspense
             fallback={
@@ -75,9 +81,14 @@ export function UniversePage() {
 
         <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <Badge tone="cyan" className="pointer-events-auto">
-              Standby projection
-            </Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone="cyan" className="pointer-events-auto">
+                Standby projection
+              </Badge>
+              <span className="instrument-chip pointer-events-auto hidden sm:inline-flex">
+                Three.js · WebGL
+              </span>
+            </div>
             <div className="pointer-events-auto rounded-lg border border-line bg-midnight-950/60 px-3 py-2 text-right backdrop-blur-sm">
               <p className="eyebrow">Corpus points</p>
               <p className="num mt-1 text-[13px] text-ink">
@@ -101,8 +112,19 @@ export function UniversePage() {
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
-            <span>Orbit: drag · Zoom: scroll</span>
-            <span>{autoRotate && !settings.reduceMotion ? 'Auto-orbit active' : 'Auto-orbit paused'}</span>
+            <span>Orbit: drag · Zoom: scroll · Damped camera</span>
+            <span className="inline-flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'size-1 rounded-full',
+                  autoRotate && !settings.reduceMotion
+                    ? 'animate-pulse-soft bg-cyan shadow-glow-cyan'
+                    : 'bg-ink-faint',
+                )}
+              />
+              {autoRotate && !settings.reduceMotion ? 'Auto-orbit active' : 'Auto-orbit paused'}
+            </span>
           </div>
         </div>
       </div>

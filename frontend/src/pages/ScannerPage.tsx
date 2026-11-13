@@ -12,7 +12,7 @@ import { EmptyState } from '@/components/feedback/EmptyState'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { TableSkeleton } from '@/components/feedback/LoadingState'
 import { useScannerHealth, useScans, useStartScan } from '@/services/queries'
-import { formatDateTime, hostnameOf } from '@/lib/format'
+import { formatDateTime, formatNumber, hostnameOf } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { Severity } from '@/types'
 
@@ -42,6 +42,56 @@ const statusTone: Record<string, 'success' | 'cyan' | 'neutral' | 'critical' | '
   queued: 'neutral',
   partial: 'moderate',
   failed: 'critical',
+}
+
+type PipelineState = 'ready' | 'waiting' | 'planned'
+
+const pipelineTone: Record<PipelineState, string> = {
+  ready: 'border-cyan/30 bg-cyan-dim text-cyan-soft',
+  waiting: 'border-severity-moderate/25 bg-severity-moderate/10 text-severity-moderate',
+  planned: 'border-line-strong bg-white/[0.02] text-ink-faint',
+}
+
+function CollectionPipeline({ serviceOnline }: { serviceOnline: boolean }) {
+  const steps: Array<{ number: string; title: string; detail: string; state: PipelineState }> = [
+    { number: '01', title: 'Validate input', detail: 'Schema checked locally', state: 'ready' },
+    {
+      number: '02',
+      title: 'Queue scan',
+      detail: serviceOnline ? 'Endpoint responding' : 'Awaiting service',
+      state: serviceOnline ? 'ready' : 'waiting',
+    },
+    { number: '03', title: 'Render & evaluate', detail: 'Playwright · axe-core', state: 'planned' },
+    { number: '04', title: 'Persist record', detail: 'SQLite corpus', state: 'planned' },
+  ]
+
+  return (
+    <section aria-label="Collection pipeline" className="panel overflow-hidden">
+      <div className="grid divide-y divide-line sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">
+        {steps.map((step) => (
+          <div
+            key={step.number}
+            className="relative border-line px-5 py-4 sm:border-l sm:first:border-l-0 sm:[&:nth-child(n+3)]:border-t lg:border-t-0"
+          >
+            <div className="flex items-center gap-2.5">
+              <span
+                className={cn(
+                  'flex size-6 shrink-0 items-center justify-center rounded-md border font-mono text-[10px]',
+                  pipelineTone[step.state],
+                )}
+              >
+                {step.number}
+              </span>
+              <p className="text-[12.5px] font-medium text-ink">{step.title}</p>
+            </div>
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+              {step.detail}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
 }
 
 function SeverityCell({ severity }: { severity: Record<Severity, number> }) {
@@ -115,6 +165,10 @@ export function ScannerPage() {
           </Button>
         }
       />
+
+      <div className="animate-fade-up animate-delay-1">
+        <CollectionPipeline serviceOnline={serviceOnline} />
+      </div>
 
       {!serviceOnline && !health.isPending ? (
         <Alert tone="warning" title="Scanner service not reachable">
@@ -298,9 +352,14 @@ export function ScannerPage() {
       <section aria-labelledby="recent-scans" className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 id="recent-scans" className="text-[15px] font-medium text-ink">
-              Recent captures
-            </h2>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h2 id="recent-scans" className="text-[15px] font-medium text-ink">
+                Recent captures
+              </h2>
+              {recent.isSuccess ? (
+                <Badge tone="neutral">{formatNumber(recent.data.total)} total</Badge>
+              ) : null}
+            </div>
             <p className="mt-1 text-[12.5px] text-ink-faint">Latest records in the collection queue.</p>
           </div>
           <Button variant="outline" size="sm" asChild>

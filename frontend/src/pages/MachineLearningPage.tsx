@@ -25,7 +25,16 @@ const algorithmTone: Record<ModelRun['algorithm'], 'cyan' | 'violet' | 'neutral'
   'isolation-forest': 'neutral',
 }
 
+const severityColor: Record<ModelRun['clusters'][number]['dominantSeverity'], string> = {
+  critical: '#f0567a',
+  serious: '#f59e6a',
+  moderate: '#e7c15a',
+  minor: '#5ec8b0',
+}
+
 function RunCard({ run }: { run: ModelRun }) {
+  const clusteredRows = run.clusters.reduce((total, cluster) => total + cluster.size, 0)
+
   return (
     <Card>
       <CardHeader
@@ -50,14 +59,71 @@ function RunCard({ run }: { run: ModelRun }) {
             <p className="num mt-1.5 text-[16px] text-ink">{run.clusters.length}</p>
           </div>
           <div className="rounded-lg border border-line bg-midnight-950/40 px-3.5 py-3">
-            <p className="eyebrow">Silhouette</p>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="eyebrow">Silhouette</p>
+              <span className="font-mono text-[9px] text-ink-faint">−1…1</span>
+            </div>
             <p className="num mt-1.5 text-[16px] text-ink">{formatDecimal(run.silhouette)}</p>
+            {typeof run.silhouette === 'number' && Number.isFinite(run.silhouette) ? (
+              <div className="meter mt-2 h-1">
+                <div
+                  className="meter-fill"
+                  style={{ width: `${Math.max(2, Math.min(1, run.silhouette) * 100)}%` }}
+                />
+              </div>
+            ) : null}
           </div>
           <div className="rounded-lg border border-line bg-midnight-950/40 px-3.5 py-3">
             <p className="eyebrow">Outliers</p>
             <p className="num mt-1.5 text-[16px] text-ink">{run.outliers.length}</p>
           </div>
         </div>
+
+        {run.clusters.length > 0 ? (
+          <div>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="eyebrow">Cluster composition</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-faint">
+                {formatNumber(clusteredRows)} clustered rows
+              </p>
+            </div>
+            <div
+              role="img"
+              aria-label={`Cluster composition: ${run.clusters
+                .map((cluster) => `${cluster.label}, ${cluster.size} rows, ${cluster.dominantSeverity}`)
+                .join('; ')}`}
+              className="mt-2 flex h-2.5 gap-0.5 overflow-hidden rounded-full border border-line/60"
+            >
+              {run.clusters.map((cluster) => (
+                <div
+                  key={cluster.clusterId}
+                  title={`${cluster.label} · ${cluster.size} rows`}
+                  style={{
+                    flexGrow: Math.max(1, cluster.size),
+                    flexBasis: 0,
+                    backgroundColor: severityColor[cluster.dominantSeverity],
+                    opacity: 0.8,
+                  }}
+                />
+              ))}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+              {run.clusters.map((cluster) => (
+                <span
+                  key={cluster.clusterId}
+                  className="inline-flex items-center gap-1.5 font-mono text-[10px] text-ink-faint"
+                >
+                  <span
+                    className="size-1.5 rounded-full"
+                    style={{ backgroundColor: severityColor[cluster.dominantSeverity] }}
+                    aria-hidden="true"
+                  />
+                  {cluster.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {run.clusters.length > 0 ? (
           <div className="overflow-x-auto">
@@ -87,6 +153,32 @@ function RunCard({ run }: { run: ModelRun }) {
                 ))}
               </tbody>
             </table>
+          </div>
+        ) : null}
+
+        {run.outliers.length > 0 ? (
+          <div>
+            <p className="text-[12px] font-medium text-ink">Flagged outliers</p>
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full min-w-[380px] text-left text-[12px]">
+                <thead>
+                  <tr className="border-b border-line text-2xs uppercase tracking-[0.08em] text-ink-faint">
+                    <th scope="col" className="py-1.5 pr-3 font-medium">Domain</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">Anomaly score</th>
+                    <th scope="col" className="py-1.5 text-right font-medium">Issues</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {run.outliers.map((outlier) => (
+                    <tr key={outlier.scanId}>
+                      <td className="py-2 pr-3 text-ink-muted">{outlier.domain}</td>
+                      <td className="num py-2 pr-3 text-right text-ink">{formatDecimal(outlier.anomalyScore)}</td>
+                      <td className="num py-2 text-right text-ink-muted">{formatNumber(outlier.issueCount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : null}
 
