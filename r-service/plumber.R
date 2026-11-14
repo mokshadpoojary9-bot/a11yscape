@@ -1,7 +1,8 @@
 # A11YSCAPE R data API.
 #
-# This phase exposes the stored SQLite scan corpus to R. Statistical analysis,
-# ML, recommendations and reports are intentionally not implemented yet.
+# This phase exposes the stored SQLite scan corpus to R and runs PCA/K-means
+# over it. Other statistical analysis, recommendations and reports remain
+# intentionally unimplemented.
 #
 # Start from the repository root with: Rscript r-service/scripts/run.R
 
@@ -20,6 +21,7 @@ source("R/errors.R")
 source("R/validation.R")
 source("R/db.R")
 source("R/summary.R")
+source("R/ml.R")
 
 health_payload <- function() {
   status <- database_status()
@@ -61,6 +63,20 @@ summary_handler <- function(req, res, limit = "") {
   parsed_limit <- parse_limit(limit, default = 10L, maximum = 100L)
   with_database(function(connection) {
     build_summary(connection, recent_limit = parsed_limit)
+  })
+}
+
+ml_runs_handler <- function(req, res, limit = "") {
+  parsed_limit <- parse_limit(limit, default = 20L, maximum = 100L)
+  with_database(function(connection) {
+    list_model_runs(connection, parsed_limit)
+  })
+}
+
+ml_run_handler <- function(req, res) {
+  options <- validate_ml_body(req$body)
+  with_database(function(connection) {
+    run_ml_and_store(connection, options$k)
   })
 }
 
@@ -115,6 +131,8 @@ api$handle("GET", "/health", function(req, res) {
 api$handle("GET", "/api/summary", summary_handler)
 api$handle("GET", "/api/scans/recent", recent_scans_handler)
 api$handle("GET", "/api/scans/<id>", scan_detail_handler)
+api$handle("GET", "/api/ml/runs", ml_runs_handler)
+api$handle("POST", "/api/ml/runs", ml_run_handler)
 
 # Contract placeholders: the frontend already calls these routes, but analysis
 # results must not be fabricated before the statistical phase is implemented.

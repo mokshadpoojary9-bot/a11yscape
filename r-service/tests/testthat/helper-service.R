@@ -15,7 +15,7 @@ service_dir <- Sys.getenv(
   unset = normalizePath(file.path(getwd(), "..", ".."), winslash = "/", mustWork = FALSE)
 )
 
-for (file in c("config.R", "errors.R", "validation.R", "db.R", "summary.R")) {
+for (file in c("config.R", "errors.R", "validation.R", "db.R", "summary.R", "ml.R")) {
   source(file.path(service_dir, "R", file))
 }
 
@@ -119,7 +119,7 @@ seed_fixture <- function(connection) {
   )
   insert_scan(
     connection, "scan-2", "site-b", "https://b.example/beta", "Beta page",
-    "partial", "2026-01-02T10:00:00Z", NA_character_, NA_integer_, 1L, 1L,
+    "partial", "2026-01-02T10:00:00Z", NA_character_, 1500L, 1L, 1L,
     serious = 1L
   )
   insert_scan(

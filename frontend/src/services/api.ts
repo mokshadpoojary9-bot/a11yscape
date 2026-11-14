@@ -165,6 +165,7 @@ export interface AnalyticsClient {
   latestAnalysis(signal?: AbortSignal): Promise<AnalysisRun | null>
   runAnalysis(request: AnalysisRequest): Promise<AnalysisRun>
   modelRuns(signal?: AbortSignal): Promise<ModelRun[]>
+  runModels(k?: number): Promise<ModelRun>
   recommendations(signal?: AbortSignal): Promise<Recommendation[]>
   reports(signal?: AbortSignal): Promise<ReportRecord[]>
   generateReport(title: string, format: ReportRecord['format']): Promise<ReportRecord>
@@ -189,6 +190,12 @@ export function createAnalyticsClient(baseUrl: string): AnalyticsClient {
         timeoutMs: 120_000,
       }),
     modelRuns: (signal) => apiRequest<ModelRun[]>(baseUrl, '/api/ml/runs', service, { signal }),
+    runModels: (k) =>
+      apiRequest<ModelRun>(baseUrl, '/api/ml/runs', service, {
+        method: 'POST',
+        body: k === undefined ? {} : { k },
+        timeoutMs: 120_000,
+      }),
     recommendations: (signal) =>
       apiRequest<Recommendation[]>(baseUrl, '/api/recommendations', service, { signal }),
     reports: (signal) => apiRequest<ReportRecord[]>(baseUrl, '/api/reports', service, { signal }),

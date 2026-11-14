@@ -139,8 +139,51 @@ export interface ClusterProfile {
   label: string
   size: number
   meanIssueCount: number
-  dominantSeverity: Severity
+  dominantSeverity: Severity | 'none'
   topRules: string[]
+  /** Feature means for this cluster, in the original units returned by R. */
+  centroid?: Record<string, number>
+}
+
+export interface PcaLoading {
+  feature: string
+  pc1: number
+  pc2: number
+}
+
+export interface PcaScore {
+  scanId: string
+  domain: string
+  pc1: number
+  pc2: number
+  clusterId: number
+}
+
+export interface PcaSummary {
+  features: string[]
+  explainedVariance: number[]
+  cumulativeVariance: number[]
+  loadings: PcaLoading[]
+  scores: PcaScore[]
+  excludedScans: number
+  droppedFeatures: string[]
+}
+
+export interface KSelectionCandidate {
+  k: number
+  silhouette: number
+}
+
+export interface KSelection {
+  method: 'silhouette'
+  candidates: KSelectionCandidate[]
+  selectedK: number
+}
+
+export interface ClusterAssignment {
+  scanId: string
+  domain: string
+  clusterId: number
 }
 
 export interface OutlierRecord {
@@ -160,6 +203,9 @@ export interface ModelRun {
   clusters: ClusterProfile[]
   outliers: OutlierRecord[]
   notes: string[]
+  pca?: PcaSummary | null
+  kSelection?: KSelection | null
+  assignments?: ClusterAssignment[]
 }
 
 /** ------------------------------------------------------------ Recommendations */

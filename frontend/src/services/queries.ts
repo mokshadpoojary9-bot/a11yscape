@@ -130,6 +130,18 @@ export function useModelRuns() {
   })
 }
 
+export function useRunModels() {
+  const analytics = useAnalytics()
+  const queryClient = useQueryClient()
+  const { settings } = useSettings()
+  return useMutation({
+    mutationFn: (k?: number) => analytics.runModels(k),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.modelRuns(settings.analyticsBaseUrl) })
+    },
+  })
+}
+
 export function useRecommendations() {
   const analytics = useAnalytics()
   const { settings } = useSettings()

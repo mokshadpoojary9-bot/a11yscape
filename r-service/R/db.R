@@ -1,7 +1,8 @@
 # Read-only access to the scanner-owned SQLite corpus.
 #
-# This phase exposes stored scan data through R. It never writes scan,
-# violation or website rows, and it does not persist derived analysis.
+# This module exposes stored scan data through R. It never writes scan,
+# violation or website rows; derived model runs are kept in the additive
+# model_runs table.
 
 required_tables <- c("websites", "scans", "violations")
 
@@ -115,6 +116,56 @@ query_scan <- function(connection, id) {
   )
   if (nrow(rows) == 0) return(NULL)
   rows[1, , drop = FALSE]
+}
+
+ensure_model_runs_table <- function(connection) {
+  DBI::dbExecute(
+    connection,
+    "CREATE TABLE IF NOT EXISTS model_runs (
+       id TEXT PRIMARY KEY,
+       created_at TEXT NOT NULL,
+       algorithm TEXT NOT NULL,
+       dataset_rows INTEGER NOT NULL,
+       payload TEXT NOT NULL
+     );"
+  )
+}
+
+save_model_run <- function(connection, run) {
+  ensure_model_runs_table(connection)
+  payload <- jsonlite::toJSON(
+    run,
+    auto_unbox = TRUE,
+    null = "null",
+    digits = NA
+  )
+  DBI::dbExecute(
+    connection,
+    "INSERT INTO model_runs (id, created_at, algorithm, dataset_rows, payload)
+     VALUES (?, ?, ?, ?, ?)",
+    params = list(
+      run$id,
+      run$createdAt,
+      run$algorithm,
+      as.integer(run$datasetRows),
+      as.character(payload)
+    )
+  )
+  invisible(run)
+}
+
+list_model_runs <- function(connection, limit = 20L) {
+  ensure_model_runs_table(connection)
+  rows <- DBI::dbGetQuery(
+    connection,
+    "SELECT payload FROM model_runs
+     ORDER BY created_at DESC, rowid DESC LIMIT ?",
+    params = list(as.integer(limit))
+  )
+  if (nrow(rows) == 0) return(list())
+  lapply(rows$payload, function(payload) {
+    jsonlite::fromJSON(payload, simplifyVector = FALSE)
+  })
 }
 
 query_violations <- function(connection, scan_id = NULL) {
