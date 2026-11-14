@@ -96,6 +96,25 @@ export function AnalysisPage() {
           error={analysis.error}
           onRetry={() => void analysis.refetch()}
         />
+      ) : result?.status === 'insufficient_data' ? (
+        <EmptyState
+          icon={Sigma}
+          title="Not enough data for analysis"
+          description={
+            result.message ?? 'Run at least one website scan first.'
+          }
+          action={
+            <Button
+              onClick={() => run.mutate({ includeCorrelation })}
+              loading={run.isPending}
+              disabled={offline}
+            >
+              <Play aria-hidden="true" />
+              Run analysis
+            </Button>
+          }
+          footnote="POST /api/analysis · R Plumber · SQLite dataset"
+        />
       ) : !result ? (
         <EmptyState
           icon={Sigma}

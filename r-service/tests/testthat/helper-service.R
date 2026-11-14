@@ -15,7 +15,7 @@ service_dir <- Sys.getenv(
   unset = normalizePath(file.path(getwd(), "..", ".."), winslash = "/", mustWork = FALSE)
 )
 
-for (file in c("config.R", "errors.R", "validation.R", "db.R", "summary.R", "ml.R", "recommendations.R", "reports.R")) {
+for (file in c("config.R", "errors.R", "validation.R", "db.R", "summary.R", "analysis.R", "ml.R", "recommendations.R", "reports.R")) {
   source(file.path(service_dir, "R", file))
 }
 

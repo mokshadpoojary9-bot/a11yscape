@@ -115,6 +115,9 @@ export interface DomainSummary {
 export interface AnalysisRun {
   id: string
   createdAt: string
+  /** `insufficient_data` is a successful run over a corpus too small to describe. */
+  status?: 'completed' | 'insufficient_data'
+  message?: string | null
   datasetRows: number
   method: string
   severityDistribution: SeverityDistribution[]

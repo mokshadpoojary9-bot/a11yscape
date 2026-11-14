@@ -70,6 +70,34 @@ validate_ml_body <- function(body) {
   list(k = parse_ml_k(body$k))
 }
 
+validate_analysis_body <- function(body) {
+  if (is.null(body) || length(body) == 0) return(list(includeCorrelation = FALSE))
+  if (!is.list(body)) {
+    stop_api(400L, "The request body must be a JSON object.")
+  }
+  unknown <- setdiff(names(body), c("includeCorrelation", "include_correlation"))
+  if (length(unknown) > 0) {
+    stop_api(
+      400L,
+      paste0("Unknown analysis options: ", paste(unknown, collapse = ", "), "."),
+      list(parameter = unknown[[1]])
+    )
+  }
+
+  # The Analysis page sends includeCorrelation; the snake_case alias keeps
+  # plain curl requests readable.
+  value <- body$includeCorrelation %||% body$include_correlation
+  if (is.null(value)) return(list(includeCorrelation = FALSE))
+  if (!is.logical(value) || length(value) != 1L || is.na(value)) {
+    stop_api(
+      400L,
+      "includeCorrelation must be true or false.",
+      list(parameter = "includeCorrelation")
+    )
+  }
+  list(includeCorrelation = isTRUE(value))
+}
+
 parse_report_format <- function(value) {
   if (is.null(value) || length(value) == 0 || !nzchar(as.character(value))) {
     return("csv")

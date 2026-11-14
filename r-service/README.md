@@ -21,14 +21,20 @@ Implemented:
   dataset overview, findings, statistics, PCA, K-means, recommendations,
   limitations and methodology
 - Report metadata in the additive `reports` table
+- Statistical analysis: stored-corpus summary, severity distribution, WCAG
+  criterion frequencies, descriptive statistics and an optional Pearson
+  correlation matrix, persisted in the additive `analysis_runs` table
 
 Deliberately not implemented yet:
 
-- Statistical analysis (descriptives, correlation, WCAG aggregation)
 - Three.js features
 
-The `/api/analysis` routes are contract placeholders that return `501`, and
-`/api/analysis/latest` returns `404`. They never return invented results.
+The analysis routes never invent results: a corpus with no completed or partial
+scans returns `200` with `"status": "insufficient_data"` and the message
+`Run at least one website scan first.` A correlation matrix is only built when
+`includeCorrelation` is `true`, needs at least three scans and at least two
+severity columns with variance, and is otherwise returned as `null` with an
+explanation in `notes`.
 
 ## Requirements
 
@@ -93,8 +99,10 @@ The run script sets `A11YSCAPE_ROOT` and changes into `r-service`, so
 | `GET` | `/api/reports?limit=20` | Generated report metadata, newest first |
 | `POST` | `/api/reports` | Generate a report; `{"title": ..., "format": "csv|json|html|pdf"}` |
 | `GET` | `/reports/<file>` | Download a generated report |
-| `GET` | `/api/analysis/latest` | `404`; analysis is not implemented yet |
-| `GET`/`POST` | `/api/analysis` | `501`; analysis is not implemented yet |
+| `POST` | `/api/analysis` | Compute and store an analysis; optional `{"includeCorrelation": true}` |
+| `GET` | `/api/analysis/latest` | Newest stored analysis run, or `404` before the first run |
+| `GET` | `/api/analysis` | Same as `/api/analysis/latest` |
+| `GET` | `/api/analysis/<id>` | One stored analysis run, or `404` |
 
 `limit` is between `1` and `100`. `status` is one of `all`, `queued`, `running`,
 `completed`, `partial`, `failed`. ML `k` must be an integer from `2` to `10` and
@@ -110,6 +118,8 @@ curl "http://localhost:8000/api/scans/recent?limit=5&status=completed"
 curl http://localhost:8000/api/summary
 curl http://localhost:8000/api/ml/runs
 curl -X POST http://localhost:8000/api/ml/runs -H 'Content-Type: application/json' -d '{}'
+curl -X POST http://localhost:8000/api/analysis -H 'Content-Type: application/json' -d '{"includeCorrelation": true}'
+curl http://localhost:8000/api/analysis/latest
 ```
 
 ## Tests
@@ -119,14 +129,14 @@ Rscript r-service/scripts/test.R
 ```
 
 The tests build a temporary in-memory SQLite database, insert known rows, and
-verify that summaries, filters, scan detail, PCA/K-means output and validation
-reflect exactly those rows. They never touch `database/a11yscape.sqlite`.
+verify that summaries, filters, scan detail, statistical analysis, PCA/K-means
+output and validation reflect exactly those rows. They never touch `database/a11yscape.sqlite`.
 
 ## Data safety
 
 - Scanner-owned tables are read-only. The service only creates and appends to
-  `model_runs` when a model run is requested and `reports` when a report is
-  generated.
+  `model_runs` when a model run is requested, `analysis_runs` when an analysis
+  run completes, and `reports` when a report is generated.
 - Only `completed` and `partial` scans contribute violations and model rows.
 - Failed scans remain visible in scan listings and health counts, but their
   violations are excluded.

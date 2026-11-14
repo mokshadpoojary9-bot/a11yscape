@@ -20,6 +20,7 @@ source("R/errors.R")
 source("R/validation.R")
 source("R/db.R")
 source("R/summary.R")
+source("R/analysis.R")
 source("R/ml.R")
 source("R/recommendations.R")
 source("R/reports.R")
@@ -103,18 +104,43 @@ report_generate_handler <- function(req, res) {
   })
 }
 
-not_implemented_handler <- function(req, res) {
-  stop_api(
-    501L,
-    paste(
-      "Statistical analysis is not implemented yet.",
-      "This phase only exposes stored scan data."
+analysis_run_handler <- function(req, res) {
+  options <- validate_analysis_body(req$body)
+  with_database(function(connection) {
+    tryCatch(
+      run_analysis_and_store(connection, options$includeCorrelation),
+      api_error = function(condition) stop(condition),
+      error = function(condition) {
+        message("[r-analytics] analysis failed: ", conditionMessage(condition))
+        stop_api(
+          500L,
+          paste0("Statistical analysis failed: ", conditionMessage(condition))
+        )
+      }
     )
-  )
+  })
 }
 
-no_analysis_handler <- function(req, res) {
-  stop_api(404L, "No statistical analysis is stored; analysis is not implemented yet.")
+latest_analysis_handler <- function(req, res) {
+  with_database(function(connection) {
+    runs <- list_analysis_runs(connection, limit = 1L)
+    if (length(runs) == 0) {
+      stop_api(
+        404L,
+        "No statistical analysis is stored yet. POST /api/analysis to create one."
+      )
+    }
+    runs[[1]]
+  })
+}
+
+analysis_detail_handler <- function(req, res, id) {
+  analysis_id <- parse_scan_id(id)
+  with_database(function(connection) {
+    run <- find_analysis_run(connection, analysis_id)
+    if (is.null(run)) stop_api(404L, "Analysis run not found.")
+    run
+  })
 }
 
 api <- plumber::pr()
@@ -160,12 +186,12 @@ api$handle("GET", "/api/recommendations", recommendations_handler)
 api$handle("GET", "/api/reports", reports_handler)
 api$handle("POST", "/api/reports", report_generate_handler)
 
-# Contract placeholders: the frontend already calls these routes, but analysis
-# results must not be fabricated before the statistical phase is implemented.
-api$handle("GET", "/api/analysis/latest", no_analysis_handler)
-api$handle("GET", "/api/analysis", not_implemented_handler)
-api$handle("POST", "/api/analysis", not_implemented_handler)
-api$handle("GET", "/api/analysis/<id>", not_implemented_handler)
+# Statistical analysis: POST computes from stored rows and persists the run;
+# the GET routes serve the newest stored run so the Analysis page can reload it.
+api$handle("GET", "/api/analysis/latest", latest_analysis_handler)
+api$handle("GET", "/api/analysis", latest_analysis_handler)
+api$handle("POST", "/api/analysis", analysis_run_handler)
+api$handle("GET", "/api/analysis/<id>", analysis_detail_handler)
 
 reports_dir <- reports_directory()
 dir.create(reports_dir, recursive = TRUE, showWarnings = FALSE)
