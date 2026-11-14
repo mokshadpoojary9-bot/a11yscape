@@ -311,7 +311,7 @@ export function Topbar({ onOpenNav }: TopbarProps) {
                     A11YSCAPE v0.1
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded border border-violet/20 bg-violet-dim px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-violet-soft">
-                    Phase 1
+                    Phase 3
                   </span>
                 </div>
               </div>

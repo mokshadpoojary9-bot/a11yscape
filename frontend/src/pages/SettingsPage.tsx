@@ -117,8 +117,7 @@ export function SettingsPage() {
           <CardHeader>
             <CardTitle>Service endpoints</CardTitle>
             <p className="text-[12.5px] text-ink-faint">
-              Phase 1 ships with the expected local addresses. Adjust them if you run services on
-              other ports.
+              Defaults target the local services. Adjust them if you run services on other ports.
             </p>
           </CardHeader>
           <CardContent className="pt-0">
@@ -294,10 +293,10 @@ export function SettingsPage() {
             <CardContent className="space-y-2.5 pt-0">
               {[
                 ['Application', 'A11YSCAPE v0.1.0'],
-                ['Release', 'Phase 1 — Foundation'],
+                ['Release', 'Phases 1-3 · Integrated corpus'],
                 ['Frontend', 'React · TypeScript · Vite'],
-                ['Storage', 'SQLite (Phase 3)'],
-                ['Analysis', 'R Plumber (Phase 4)'],
+                ['Storage', 'SQLite schema v2 (Phase 3)'],
+                ['Analysis', 'R Plumber data API (Phase 4, pending R runtime)'],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-center justify-between gap-3 text-[12px]">
                   <span className="text-ink-faint">{label}</span>
@@ -308,7 +307,7 @@ export function SettingsPage() {
                 <span className="text-[12px] text-ink-faint">Status</span>
                 <Badge tone="cyan">
                   <SlidersHorizontal className="size-3" aria-hidden="true" />
-                  Phase 1
+                  Phase 3
                 </Badge>
               </div>
             </CardContent>

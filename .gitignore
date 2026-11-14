@@ -37,6 +37,9 @@ Thumbs.db
 database/*.sqlite
 database/*.sqlite3
 database/*.db
+database/*.sqlite-*
+database/*.sqlite3-*
+database/*.db-*
 datasets/raw/*
 !datasets/raw/.gitkeep
 datasets/processed/*

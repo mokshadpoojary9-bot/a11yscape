@@ -30,9 +30,9 @@ type PhaseState = 'complete' | 'next' | 'planned'
 
 const phases: Array<{ number: number; name: string; detail: string; state: PhaseState }> = [
   { number: 1, name: 'Foundation & interface', detail: 'Design system, navigation, all nine surfaces', state: 'complete' },
-  { number: 2, name: 'Website scanner', detail: 'Playwright + axe-core collection pipeline', state: 'next' },
-  { number: 3, name: 'Dataset explorer', detail: 'SQLite persistence and filtering', state: 'planned' },
-  { number: 4, name: 'Statistical engine', detail: 'R Plumber descriptive analysis', state: 'planned' },
+  { number: 2, name: 'Website scanner', detail: 'Playwright + axe-core collection pipeline', state: 'complete' },
+  { number: 3, name: 'Dataset explorer', detail: 'SQLite persistence and filtering', state: 'complete' },
+  { number: 4, name: 'Statistical engine', detail: 'R Plumber descriptive analysis', state: 'next' },
   { number: 5, name: 'Machine learning', detail: 'Clustering and anomaly detection in R', state: 'planned' },
   { number: 6, name: '3D universe', detail: 'Spatial visualisation of collected scans', state: 'planned' },
   { number: 7, name: 'Recommendation centre', detail: 'Evidence-backed remediation priorities', state: 'planned' },
@@ -50,7 +50,7 @@ const quickLinks = [
 
 const phaseBadge: Record<PhaseState, { tone: 'success' | 'cyan' | 'neutral'; label: string }> = {
   complete: { tone: 'success', label: 'Complete' },
-  next: { tone: 'cyan', label: 'In progress' },
+  next: { tone: 'cyan', label: 'Next' },
   planned: { tone: 'neutral', label: 'Planned' },
 }
 
@@ -98,9 +98,9 @@ export function OverviewPage() {
             </h2>
 
             <p className="mt-4 max-w-[48ch] text-[13.5px] leading-6 text-ink-muted">
-              This release establishes the interface, design system and service topology. Scan
-              collection, the R analytical engine and the spatial universe are not connected yet —
-              the observatory reports that honestly instead of displaying invented measurements.
+              Scan collection and the dataset explorer are connected to real stored scans. The R
+              analytical engine and the spatial universe are not connected yet — the observatory
+              reports that honestly instead of displaying invented measurements.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-2.5">
@@ -205,7 +205,7 @@ export function OverviewPage() {
           <StatCard
             label="Scans captured"
             value={formatNumber(stats?.totalScans)}
-            hint={offline ? 'Scanner service unreachable' : 'Completed and partial scan records'}
+            hint={offline ? 'Scanner service unreachable' : 'All stored scan records, including failures'}
             icon={ScanSearch}
             tone="cyan"
             loading={loading}
@@ -233,7 +233,7 @@ export function OverviewPage() {
                 '—'
               )
             }
-            hint={offline ? 'Scanner service unreachable' : 'Most recent completed scan'}
+            hint={offline ? 'Scanner service unreachable' : 'Most recent stored scan'}
             icon={ShieldCheck}
             loading={loading}
           />
@@ -303,7 +303,7 @@ export function OverviewPage() {
                   <ServiceStatusChip service="scanner" showLabel={false} />
                 </div>
                 <p className="mt-2 break-all font-mono text-[11px] text-ink-faint">
-                  {scannerHealth.data ? `v${scannerHealth.data.version ?? '0.1'} · ${scannerHealth.data.service}` : 'Awaiting Phase 2 provisioning'}
+                  {scannerHealth.data ? `v${scannerHealth.data.version ?? '0.1'} · ${scannerHealth.data.service}` : 'Scanner service unavailable'}
                 </p>
               </div>
               <div className="rounded-lg border border-line bg-midnight-950/40 p-3.5">
@@ -312,7 +312,7 @@ export function OverviewPage() {
                   <ServiceStatusChip service="analytics" showLabel={false} />
                 </div>
                 <p className="mt-2 break-all font-mono text-[11px] text-ink-faint">
-                  Awaiting Phase 4 · R Plumber API
+                  R analytics engine unavailable
                 </p>
               </div>
               <Button variant="outline" size="sm" className="w-full" asChild>

@@ -75,6 +75,13 @@ export function useScans(filters: ScanFilters) {
     queryFn: ({ signal }) => scanner.scans(filters, signal),
     retry: 0,
     placeholderData: (previous) => previous,
+    // Follow the real queue while a stored scan is still being collected.
+    refetchInterval: (query) =>
+      query.state.data?.records.some(
+        (record) => record.status === 'queued' || record.status === 'running',
+      )
+        ? 3000
+        : false,
   })
 }
 

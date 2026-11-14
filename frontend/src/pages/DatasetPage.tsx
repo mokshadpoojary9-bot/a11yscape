@@ -25,7 +25,7 @@ import { useScans } from '@/services/queries'
 import { useSettings } from '@/hooks/useSettings'
 import { formatDateTime, formatDuration, formatNumber, hostnameOf } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { SEVERITY_ORDER, type ScanFilters, type ScanRecord, type ScanStatus, type Severity } from '@/types'
+import type { ScanFilters, ScanRecord, ScanStatus, Severity } from '@/types'
 
 const severityLabel: Record<Severity, string> = {
   critical: 'Critical',
@@ -53,10 +53,6 @@ const PAGE_SIZES = [10, 20, 50]
 
 type SortKey = 'target' | 'status' | 'pages' | 'issues' | 'severity' | 'duration' | 'captured'
 type SortDirection = 'asc' | 'desc'
-
-function severityTotal(scan: ScanRecord): number {
-  return SEVERITY_ORDER.reduce((total, severity) => total + (scan.violationsBySeverity?.[severity] ?? 0), 0)
-}
 
 function SortHeader({
   label,
@@ -124,39 +120,17 @@ export function DatasetPage() {
       status,
       page,
       pageSize,
+      sort: sortKey ?? undefined,
+      direction: sortKey ? sortDirection : undefined,
     }),
-    [deferredQuery, severity, status, page, pageSize],
+    [deferredQuery, severity, status, page, pageSize, sortKey, sortDirection],
   )
 
   const scans = useScans(filters)
-
-  const records = useMemo(() => {
-    const list = scans.data?.records ?? []
-    if (!sortKey) return list
-    const factor = sortDirection === 'asc' ? 1 : -1
-    return [...list].sort((a, b) => {
-      switch (sortKey) {
-        case 'target':
-          return factor * (a.pageTitle ?? a.domain).localeCompare(b.pageTitle ?? b.domain)
-        case 'status':
-          return factor * a.status.localeCompare(b.status)
-        case 'pages':
-          return factor * (a.pagesScanned - b.pagesScanned)
-        case 'issues':
-          return factor * (a.issueCount - b.issueCount)
-        case 'severity':
-          return factor * (severityTotal(a) - severityTotal(b))
-        case 'duration':
-          return factor * ((a.durationMs ?? 0) - (b.durationMs ?? 0))
-        case 'captured':
-          return factor * a.startedAt.localeCompare(b.startedAt)
-        default:
-          return 0
-      }
-    })
-  }, [scans.data, sortKey, sortDirection])
+  const records = scans.data?.records ?? []
 
   function handleSort(key: SortKey) {
+    setPage(1)
     if (sortKey === key) {
       setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'))
       return
@@ -182,9 +156,13 @@ export function DatasetPage() {
     if (deferredQuery) params.set('query', deferredQuery)
     if (severity !== 'all') params.set('severity', severity)
     if (status !== 'all') params.set('status', status)
+    if (sortKey) {
+      params.set('sort', sortKey)
+      params.set('direction', sortDirection)
+    }
     const search = params.toString()
     return `${base}/api/exports/scans.csv${search ? `?${search}` : ''}`
-  }, [settings.scannerBaseUrl, deferredQuery, severity, status])
+  }, [settings.scannerBaseUrl, deferredQuery, severity, status, sortKey, sortDirection])
 
   return (
     <div className="space-y-7">
@@ -390,9 +368,7 @@ export function DatasetPage() {
               <span className="num text-ink-muted">{records.length}</span> of{' '}
               <span className="num text-ink-muted">{total}</span>
               {sortKey ? (
-                <span className="ml-1.5 text-ink-faint/80">
-                  · sorting applies to this page only
-                </span>
+                <span className="ml-1.5 text-ink-faint/80">· sorted across the full dataset</span>
               ) : null}
             </p>
             <div className="flex items-center gap-2">

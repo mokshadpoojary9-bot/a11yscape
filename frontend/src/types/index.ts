@@ -28,6 +28,8 @@ export interface ScanIssue {
   helpUrl?: string
   wcagTags: string[]
   nodeCount: number
+  /** A short sample of affected element selectors, when recorded. */
+  elements?: string[]
   pageUrl: string
 }
 
@@ -56,12 +58,25 @@ export interface PaginatedScans {
   records: ScanRecord[]
 }
 
+export type ScanSortKey =
+  | 'target'
+  | 'status'
+  | 'pages'
+  | 'issues'
+  | 'severity'
+  | 'duration'
+  | 'captured'
+
+export type SortDirection = 'asc' | 'desc'
+
 export interface ScanFilters {
   query?: string
   severity?: Severity | 'all'
   status?: ScanStatus | 'all'
   page?: number
   pageSize?: number
+  sort?: ScanSortKey
+  direction?: SortDirection
 }
 
 /** Request payload for POST /api/scans */

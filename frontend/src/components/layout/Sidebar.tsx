@@ -73,19 +73,19 @@ function PhaseProgress() {
     <div className="rounded-xl border border-line bg-midnight-950/35 p-3.5">
       <div className="flex items-center justify-between gap-3">
         <p className="eyebrow">Mission pipeline</p>
-        <span className="font-mono text-[10px] text-cyan-soft/80">1 / 8</span>
+        <span className="font-mono text-[10px] text-cyan-soft/80">3 / 8</span>
       </div>
       <div
         className="mt-2.5 h-1 overflow-hidden rounded-full bg-white/[0.055]"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={8}
-        aria-valuenow={1}
+        aria-valuenow={3}
         aria-label="Research phases complete"
       >
-        <div className="h-full w-[12.5%] rounded-full bg-gradient-to-r from-cyan to-electric shadow-[0_0_12px_rgba(34,211,238,0.55)]" />
+        <div className="h-full w-[37.5%] rounded-full bg-gradient-to-r from-cyan to-electric shadow-[0_0_12px_rgba(34,211,238,0.55)]" />
       </div>
-      <p className="mt-2 text-[10.5px] leading-4 text-ink-faint">Foundation complete · Scanner next</p>
+      <p className="mt-2 text-[10.5px] leading-4 text-ink-faint">Phases 1-3 complete · Analysis next</p>
     </div>
   )
 }

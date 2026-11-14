@@ -141,6 +141,8 @@ export function createScannerClient(baseUrl: string): ScannerClient {
       if (filters.query) params.set('query', filters.query)
       if (filters.severity && filters.severity !== 'all') params.set('severity', filters.severity)
       if (filters.status && filters.status !== 'all') params.set('status', filters.status)
+      if (filters.sort) params.set('sort', filters.sort)
+      if (filters.direction) params.set('direction', filters.direction)
       params.set('page', String(filters.page ?? 1))
       params.set('pageSize', String(filters.pageSize ?? 20))
       return apiRequest<PaginatedScans>(baseUrl, `/api/scans?${params.toString()}`, service, { signal })
