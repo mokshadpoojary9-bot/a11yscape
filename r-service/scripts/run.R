@@ -35,5 +35,7 @@ message("[r-analytics] database: ", file.path(
 ))
 message("[r-analytics] listening on http://", host, ":", port)
 
-api <- plumber::plumb(file.path(service_dir, "plumber.R"))
+# plumber.R builds its router programmatically; plumb() only parses annotation-
+# style files, so source the router and run the returned Plumber object.
+source(file.path(service_dir, "plumber.R"))
 api$run(host = host, port = port, swagger = TRUE)

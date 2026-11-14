@@ -13,7 +13,7 @@ api_error <- function(status, message, details = NULL) {
 }
 
 stop_api <- function(status, message, details = NULL) {
-  stop(api_error(status, message, details), call. = FALSE)
+  stop(api_error(status, message, details))
 }
 
 error_body <- function(message) {

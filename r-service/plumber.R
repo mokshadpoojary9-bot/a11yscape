@@ -37,7 +37,7 @@ health_payload <- function() {
   )
 }
 
-recent_scans_handler <- function(req, res, limit = NULL, status = NULL, query = NULL) {
+recent_scans_handler <- function(req, res, limit = "", status = "", query = "") {
   parsed_limit <- parse_limit(limit, default = 10L, maximum = 100L)
   parsed_status <- parse_status(status)
   parsed_query <- parse_query_text(query)
@@ -57,7 +57,7 @@ scan_detail_handler <- function(req, res, id) {
   })
 }
 
-summary_handler <- function(req, res, limit = NULL) {
+summary_handler <- function(req, res, limit = "") {
   parsed_limit <- parse_limit(limit, default = 10L, maximum = 100L)
   with_database(function(connection) {
     build_summary(connection, recent_limit = parsed_limit)
@@ -80,7 +80,10 @@ no_analysis_handler <- function(req, res) {
 
 api <- plumber::pr()
 api <- plumber::pr_set_parsers(api, "json")
-api <- plumber::pr_set_serializer(api, plumber::serializer_json())
+api <- plumber::pr_set_serializer(
+  api,
+  plumber::serializer_json(auto_unbox = TRUE, null = "null", digits = NA)
+)
 
 api <- plumber::pr_filter(api, "cors", function(req, res) {
   origin <- req$HTTP_ORIGIN %||% ""
