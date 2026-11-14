@@ -165,9 +165,14 @@ export function ReportsPage() {
                   <Badge tone={formatTone[format]}>{format.toUpperCase()}</Badge>
                 </div>
                 <ul className="mt-2 space-y-1 text-[11px] leading-4 text-ink-faint">
-                  <li>Cover · title and generation timestamp</li>
-                  <li>Dataset · scan and violation records</li>
-                  <li>Analysis · severity and WCAG summaries</li>
+                  <li>Executive summary</li>
+                  <li>Dataset overview</li>
+                  <li>Accessibility findings</li>
+                  <li>Statistical analysis</li>
+                  <li>PCA results</li>
+                  <li>K-means cluster results</li>
+                  <li>Recommendations and priorities</li>
+                  <li>Limitations and methodology</li>
                 </ul>
                 <p className="mt-2 text-[10px] text-ink-faint/80">
                   Outline only — the content is written by the R engine.
@@ -247,6 +252,39 @@ export function ReportsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {created ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Report preview</CardTitle>
+            <p className="text-[12.5px] text-ink-faint">
+              Generated {formatDateTime(created.createdAt)} · {created.format.toUpperCase()} ·{' '}
+              {formatBytes(created.sizeBytes)}
+            </p>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-[13px] text-ink">{created.title}</p>
+            <p className="mt-1 text-[12px] text-ink-muted">
+              The file is written by the R engine and includes the executive summary, dataset overview,
+              accessibility findings, statistical analysis, PCA and K-means results, recommendations,
+              and limitations.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button variant="secondary" asChild>
+                <a href={created.downloadUrl} target="_blank" rel="noreferrer">
+                  Preview
+                </a>
+              </Button>
+              <Button asChild>
+                <a href={created.downloadUrl} download>
+                  <Download aria-hidden="true" />
+                  Download
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

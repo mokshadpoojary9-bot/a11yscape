@@ -1,8 +1,7 @@
 # A11YSCAPE R data API.
 #
-# This phase exposes the stored SQLite scan corpus to R and runs PCA/K-means
-# over it. Other statistical analysis, recommendations and reports remain
-# intentionally unimplemented.
+# This phase exposes the stored SQLite scan corpus to R, runs PCA/K-means,
+# derives rule-based recommendations, and generates reports.
 #
 # Start from the repository root with: Rscript r-service/scripts/run.R
 
@@ -22,6 +21,8 @@ source("R/validation.R")
 source("R/db.R")
 source("R/summary.R")
 source("R/ml.R")
+source("R/recommendations.R")
+source("R/reports.R")
 
 health_payload <- function() {
   status <- database_status()
@@ -80,6 +81,28 @@ ml_run_handler <- function(req, res) {
   })
 }
 
+recommendations_handler <- function(req, res) {
+  with_database(function(connection) {
+    model_runs <- list_model_runs(connection, limit = 1L)
+    model_run <- if (length(model_runs) > 0) model_runs[[1]] else NULL
+    recommendations_payload(connection, model_run)
+  })
+}
+
+reports_handler <- function(req, res, limit = "") {
+  parsed_limit <- parse_limit(limit, default = 20L, maximum = 100L)
+  with_database(function(connection) {
+    list_reports(connection, report_base_url(req))
+  })
+}
+
+report_generate_handler <- function(req, res) {
+  options <- validate_report_body(req$body)
+  with_database(function(connection) {
+    generate_report(connection, options$title, options$format, req)
+  })
+}
+
 not_implemented_handler <- function(req, res) {
   stop_api(
     501L,
@@ -133,6 +156,9 @@ api$handle("GET", "/api/scans/recent", recent_scans_handler)
 api$handle("GET", "/api/scans/<id>", scan_detail_handler)
 api$handle("GET", "/api/ml/runs", ml_runs_handler)
 api$handle("POST", "/api/ml/runs", ml_run_handler)
+api$handle("GET", "/api/recommendations", recommendations_handler)
+api$handle("GET", "/api/reports", reports_handler)
+api$handle("POST", "/api/reports", report_generate_handler)
 
 # Contract placeholders: the frontend already calls these routes, but analysis
 # results must not be fabricated before the statistical phase is implemented.
@@ -140,6 +166,10 @@ api$handle("GET", "/api/analysis/latest", no_analysis_handler)
 api$handle("GET", "/api/analysis", not_implemented_handler)
 api$handle("POST", "/api/analysis", not_implemented_handler)
 api$handle("GET", "/api/analysis/<id>", not_implemented_handler)
+
+reports_dir <- reports_directory()
+dir.create(reports_dir, recursive = TRUE, showWarnings = FALSE)
+api <- plumber::pr_static(api, "/reports", reports_dir)
 
 api <- plumber::pr_set_404(api, function(req, res) {
   res$status <- 404L

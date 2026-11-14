@@ -70,6 +70,39 @@ validate_ml_body <- function(body) {
   list(k = parse_ml_k(body$k))
 }
 
+parse_report_format <- function(value) {
+  if (is.null(value) || length(value) == 0 || !nzchar(as.character(value))) {
+    return("csv")
+  }
+  format <- tolower(trimws(as.character(value)))
+  if (!format %in% c("csv", "json", "html", "pdf")) {
+    stop_api(400L, "format must be one of csv, json, html or pdf.", list(parameter = "format"))
+  }
+  format
+}
+
+validate_report_body <- function(body) {
+  if (is.null(body) || length(body) == 0) {
+    stop_api(400L, "The request body must be a JSON object.")
+  }
+  if (!is.list(body)) {
+    stop_api(400L, "The request body must be a JSON object.")
+  }
+  unknown <- setdiff(names(body), c("title", "format"))
+  if (length(unknown) > 0) {
+    stop_api(
+      400L,
+      paste0("Unknown report options: ", paste(unknown, collapse = ", "), "."),
+      list(parameter = unknown[[1]])
+    )
+  }
+  title <- if (is.null(body$title)) "" else trimws(as.character(body$title))
+  if (nchar(title) < 3L || nchar(title) > 120L) {
+    stop_api(400L, "title must be between 3 and 120 characters.", list(parameter = "title"))
+  }
+  list(title = title, format = parse_report_format(body$format))
+}
+
 parse_scan_id <- function(value) {
   if (is.null(value) || length(value) == 0 || !nzchar(as.character(value))) {
     stop_api(400L, "A scan id is required.")

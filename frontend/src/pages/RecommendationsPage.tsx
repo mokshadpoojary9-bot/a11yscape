@@ -49,7 +49,7 @@ export function RecommendationsPage() {
       />
 
       <Alert tone="info" title="Phase 7 scope">
-        Recommendations are generated from measured violation patterns in Phase 7. No guidance is
+        Recommendations are rule-based and generated from measured violation patterns. No guidance is
         displayed until it can be traced to recorded scans; generic advice is deliberately withheld.
       </Alert>
 
@@ -159,6 +159,39 @@ export function RecommendationsPage() {
                           <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-emerald-300" aria-hidden="true" />
                           {item.remediation}
                         </p>
+                        {item.evidence ? (
+                          <div className="mt-3 rounded-lg border border-line bg-midnight-950/35 p-3 text-[12px] text-ink-muted">
+                            <p className="eyebrow">Evidence</p>
+                            <p className="mt-1.5">
+                              {item.evidence.violations} violation(s), {item.evidence.affectedNodes} affected node(s),{' '}
+                              {item.evidence.affectedScans} scan(s), {item.evidence.affectedDomains} domain(s); severity{' '}
+                              {item.evidence.severity}.
+                            </p>
+                            {item.sourceScanIds && item.sourceScanIds.length > 0 ? (
+                              <p className="mt-1.5 font-mono text-[10.5px] text-ink-faint">
+                                Source scans: {item.sourceScanIds.join(', ')}
+                              </p>
+                            ) : null}
+                            {item.analyticsEvidence && item.analyticsEvidence.length > 0 ? (
+                              <ul className="mt-2 space-y-1">
+                                {item.analyticsEvidence.map((evidence) => (
+                                  <li key={evidence} className="leading-5">
+                                    {evidence}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
+                            {item.mlEvidence && item.mlEvidence.length > 0 ? (
+                              <ul className="mt-2 space-y-1 text-violet-soft/90">
+                                {item.mlEvidence.map((evidence) => (
+                                  <li key={evidence} className="leading-5">
+                                    {evidence}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </CardContent>
                     </Card>
                   ))}

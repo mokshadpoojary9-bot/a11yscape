@@ -222,6 +222,17 @@ export interface Recommendation {
   affectedDomains: string[]
   wcagCriteria: string[]
   remediation: string
+  evidence?: {
+    severity: Severity
+    violations: number
+    affectedNodes: number
+    affectedScans: number
+    affectedDomains: number
+    wcagCriteria: string[]
+  }
+  sourceScanIds?: string[]
+  analyticsEvidence?: string[]
+  mlEvidence?: string[]
 }
 
 /** -------------------------------------------------------------------- Reports */

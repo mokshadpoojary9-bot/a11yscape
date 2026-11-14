@@ -15,12 +15,16 @@ Implemented:
 - PCA and K-means over completed/partial scans, with explained variance,
   loadings, scores, silhouette-based k selection, assignments and centroids
 - Persisted model runs in the additive `model_runs` table
+- Rule-based recommendations derived from recorded axe-core findings, with
+  severity, analytics and latest K-means evidence
+- Report generation in CSV, JSON, HTML and PDF, with executive summary,
+  dataset overview, findings, statistics, PCA, K-means, recommendations,
+  limitations and methodology
+- Report metadata in the additive `reports` table
 
 Deliberately not implemented yet:
 
 - Statistical analysis (descriptives, correlation, WCAG aggregation)
-- Recommendations
-- Report generation
 - Three.js features
 
 The `/api/analysis` routes are contract placeholders that return `501`, and
@@ -85,6 +89,10 @@ The run script sets `A11YSCAPE_ROOT` and changes into `r-service`, so
 | `GET` | `/api/scans/<id>` | One scan with its stored violations |
 | `GET` | `/api/ml/runs?limit=20` | Persisted model runs, newest first |
 | `POST` | `/api/ml/runs` | Run PCA/K-means on eligible scans; optional `{"k": 2}` |
+| `GET` | `/api/recommendations` | Rule-based recommendations from recorded findings |
+| `GET` | `/api/reports?limit=20` | Generated report metadata, newest first |
+| `POST` | `/api/reports` | Generate a report; `{"title": ..., "format": "csv|json|html|pdf"}` |
+| `GET` | `/reports/<file>` | Download a generated report |
 | `GET` | `/api/analysis/latest` | `404`; analysis is not implemented yet |
 | `GET`/`POST` | `/api/analysis` | `501`; analysis is not implemented yet |
 
@@ -117,7 +125,8 @@ reflect exactly those rows. They never touch `database/a11yscape.sqlite`.
 ## Data safety
 
 - Scanner-owned tables are read-only. The service only creates and appends to
-  `model_runs` when a model run is requested.
+  `model_runs` when a model run is requested and `reports` when a report is
+  generated.
 - Only `completed` and `partial` scans contribute violations and model rows.
 - Failed scans remain visible in scan listings and health counts, but their
   violations are excluded.

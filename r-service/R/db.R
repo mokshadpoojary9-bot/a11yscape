@@ -168,6 +168,65 @@ list_model_runs <- function(connection, limit = 20L) {
   })
 }
 
+ensure_reports_table <- function(connection) {
+  DBI::dbExecute(
+    connection,
+    "CREATE TABLE IF NOT EXISTS reports (
+       id TEXT PRIMARY KEY,
+       created_at TEXT NOT NULL,
+       title TEXT NOT NULL,
+       format TEXT NOT NULL,
+       file_path TEXT NOT NULL,
+       size_bytes INTEGER NOT NULL
+     );"
+  )
+}
+
+save_report <- function(connection, report) {
+  ensure_reports_table(connection)
+  DBI::dbExecute(
+    connection,
+    "INSERT INTO reports (id, created_at, title, format, file_path, size_bytes)
+     VALUES (?, ?, ?, ?, ?, ?)",
+    params = list(
+      report$id,
+      report$createdAt,
+      report$title,
+      report$format,
+      report$filePath,
+      as.integer(report$sizeBytes)
+    )
+  )
+  invisible(report)
+}
+
+list_reports <- function(connection, base_url = NULL) {
+  ensure_reports_table(connection)
+  rows <- DBI::dbGetQuery(
+    connection,
+    "SELECT id, created_at, title, format, file_path, size_bytes
+     FROM reports
+     ORDER BY created_at DESC, rowid DESC LIMIT ?",
+    params = list(20L)
+  )
+  if (nrow(rows) == 0) return(list())
+  lapply(seq_len(nrow(rows)), function(index) {
+    filename <- basename(rows$file_path[[index]])
+    list(
+      id = rows$id[[index]],
+      title = rows$title[[index]],
+      format = rows$format[[index]],
+      createdAt = rows$created_at[[index]],
+      sizeBytes = as.integer(rows$size_bytes[[index]]),
+      downloadUrl = if (is.null(base_url) || !nzchar(base_url)) {
+        paste0("/reports/", filename)
+      } else {
+        paste0(sub("/$", "", base_url), "/reports/", filename)
+      }
+    )
+  })
+}
+
 query_violations <- function(connection, scan_id = NULL) {
   sql <- paste(
     "SELECT v.scan_id, w.hostname AS domain, v.rule_id, v.impact,",
