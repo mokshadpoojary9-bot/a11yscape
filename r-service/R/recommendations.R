@@ -142,8 +142,8 @@ recommendations_payload <- function(connection, model_run = NULL) {
       ),
       priority = recommendation_priority(impact, affected_scans, affected_domains),
       affectedScans = as.integer(affected_scans),
-      affectedDomains = affected_domains,
-      wcagCriteria = wcag_criteria,
+      affectedDomains = as.list(affected_domains),
+      wcagCriteria = as.list(wcag_criteria),
       remediation = remediation_for_rule(rule_id),
       evidence = list(
         severity = impact,
@@ -151,9 +151,9 @@ recommendations_payload <- function(connection, model_run = NULL) {
         affectedNodes = as.integer(node_count),
         affectedScans = as.integer(affected_scans),
         affectedDomains = as.integer(length(affected_domains)),
-        wcagCriteria = wcag_criteria
+        wcagCriteria = as.list(wcag_criteria)
       ),
-      sourceScanIds = source_scan_ids,
+      sourceScanIds = as.list(source_scan_ids),
       analyticsEvidence = as.list(analytics_evidence),
       mlEvidence = as.list(ml_evidence)
     )

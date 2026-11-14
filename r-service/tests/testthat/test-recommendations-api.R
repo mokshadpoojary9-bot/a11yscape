@@ -35,7 +35,7 @@ test_that("recommendations GET route returns rule-based recommendations", {
   expect_true(length(result) >= 3L)
   expect_true(all(vapply(result, function(item) {
     is.character(item$ruleId) && is.character(item$priority) &&
-      is.list(item$evidence) && is.character(item$sourceScanIds)
+      is.list(item$evidence) && is.list(item$sourceScanIds)
   }, logical(1))))
   expect_true(any(vapply(result, function(item) {
     identical(item$ruleId, "color-contrast")
